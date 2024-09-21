@@ -1,3 +1,3 @@
-module.exports = (client) =>{
-    console.log(`${client.user.tag} est en ligne ✔️ !`);
+module.exports = client => {
+	console.log(`${client.user.tag} est en ligne ✔️ !`);
 };

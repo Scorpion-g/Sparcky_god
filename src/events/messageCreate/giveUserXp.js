@@ -1,66 +1,71 @@
-const {Client, Message} = require('discord.js');
+const { Client, Message } = require('discord.js');
 const Level = require('../../models/Level');
-const calculateLevelXp= require('../../utils/calculateLevelXp');
+const calculateLevelXp = require('../../utils/calculateLevelXp');
 const cooldowns = new Set();
-function getRandomXp(min,max){
-    min= Math.ceil(min);
-    max = Math.floor(max);
-    return Math.floor(Math.random()*(max - min +1))+min;
+function getRandomXp(min, max) {
+	min = Math.ceil(min);
+	max = Math.floor(max);
+	return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
 /**
- * 
- * @param {Client} client 
- * @param {Message} message 
+ *
+ * @param {Client} client
+ * @param {Message} message
  */
 
-module.exports =async (client, message) =>{
-    if(!message.inGuild()|| message.author.bot|| cooldowns.has(message.author.id)) return;
+module.exports = async (client, message) => {
+	if (
+		!message.inGuild() ||
+		message.author.bot ||
+		cooldowns.has(message.author.id)
+	)
+		return;
 
-    const xpToGive=getRandomXp(5 , 15);
+	const xpToGive = getRandomXp(5, 15);
 
-    const query ={
-        userId : message.author.id,
-        guildId : message.guild.id,
-    }
+	const query = {
+		userId: message.author.id,
+		guildId: message.guild.id,
+	};
 
-    try {
-        const level = await Level.findOne(query);
+	try {
+		const level = await Level.findOne(query);
 
-        if(level){
-            level.xp += xpToGive;
+		if (level) {
+			level.xp += xpToGive;
 
-            if(level.xp > calculateLevelXp(level.level)){
-                level.xp=0;
-                level.level += 1;
+			if (level.xp > calculateLevelXp(level.level)) {
+				level.xp = 0;
+				level.level += 1;
 
-                message.channel.send(`${message.member} tu as level up au **level ${level.level}**.`);
-            }
+				message.channel.send(
+					`${message.member} tu as level up au **level ${level.level}**.`
+				);
+			}
 
+			await level.save().catch(e => {
+				console.log(`erreur sauvegarde mise à jour level ${e}`);
+				return;
+			});
+			cooldowns.add(message.author.id);
+			setTimeout(() => {
+				cooldowns.delete(message.author.id);
+			}, 60000);
+		} else {
+			const newLevel = new Level({
+				userId: message.author.id,
+				guildId: message.guild.id,
+				xp: xpToGive,
+			});
 
-            await level.save().catch((e) =>{
-                console.log(`erreur sauvegarde mise à jour level ${e}`);
-                return;
-                });
-                cooldowns.add(message.author.id);
-                setTimeout(()=>{
-                    cooldowns.delete(message.author.id)
-                }, 60000);
-            }
-            else{
-                const newLevel = new Level({
-                    userId : message.author.id,
-                    guildId: message.guild.id,
-                    xp: xpToGive,
-                });
-
-                await newLevel.save();
-                cooldowns.add(message.author.id);
-                setTimeout(()=>{
-                    cooldowns.delete(message.author.id)
-                }, 60000);
-            }       
-        }catch (error) {
-        console.log(`Erreur dans le don d'xp : ${error}`)
-    }
-}
+			await newLevel.save();
+			cooldowns.add(message.author.id);
+			setTimeout(() => {
+				cooldowns.delete(message.author.id);
+			}, 60000);
+		}
+	} catch (error) {
+		console.log(`Erreur dans le don d'xp : ${error}`);
+	}
+};
