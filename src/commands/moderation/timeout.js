@@ -1,0 +1,94 @@
+const { Client, Interaction, ApplicationCommandOptionType, PermissionFlagsBits } = require('discord.js');
+const ms = require('ms');
+
+module.exports = {
+/**
+   *
+   * @param {Client} client
+   * @param {Interaction} interaction
+   */
+
+callback: async (client, interaction) => {
+    const mentionable = interaction.options.get('membre').value;
+    const durée = interaction.options.get('durée').value; // 1d, 1 day, 1s 5s, 5m
+    const raison = interaction.options.get('raison')?.value || 'Pas de raison donné';
+
+    await interaction.deferReply();
+
+    const membre = await interaction.guild.members.fetch(mentionable);
+    if (!membre) {
+    await interaction.editReply("Cet utilisateur n'est pas sur le serveur");
+    return;
+    }
+
+    if (membre.user.bot) {
+    await interaction.editReply("Je ne peux pas timeout un bot");
+    return;
+    }
+
+    const msdurée = ms(durée);
+    if (isNaN(msdurée)) {
+    await interaction.editReply('Veuillez entré une durée valide');
+    return;
+    }
+
+    if (msdurée < 5000 || msdurée > 2.419e9) {
+    await interaction.editReply('La durée du timeout ne peut pas être de moins de 5s et de plus de 28j');
+    return;
+    }
+
+    const membreRolePosition = membre.roles.highest.position; // Highest role of the target user
+    const requestUserRolePosition = interaction.member.roles.highest.position; // Highest role of the user running the cmd
+    const botRolePosition = interaction.guild.members.me.roles.highest.position; // Highest role of the bot
+
+    if (membreRolePosition >= requestUserRolePosition) {
+    await interaction.editReply("Vous ne pouvez pas timeout ce membre car il a un rôle plus haut ou le même que vous");
+    return;
+    }
+
+    if (membreRolePosition >= botRolePosition) {
+    await interaction.editReply("Vous ne pouvez pas me timeout car j'ai a un rôle plus haut ou le même que vous");
+    return;
+    }
+
+    // Timeout the user
+    try {
+    const { default: prettyMs } = await import('pretty-ms');
+
+    if (membre.isCommunicationDisabled()) {
+        await membre.timeout(msdurée, raison);
+        await interaction.editReply(`Le timeout de ${membre} a été mis à jour  pour une durée de ${prettyMs(msdurée, { verbose: true })}\nRaison: ${raison}`);
+        return;
+    }
+
+    await membre.timeout(msdurée, raison);
+    await interaction.editReply(`${membre} a été timeout pour une durée de ${prettyMs(msdurée, { verbose: true })}.\nRaison: ${raison}`);
+    } catch (error) {
+    console.log(`Il y a eu une erreur dans le timeout d'un membre ${error}`);
+    }
+    },
+
+name: 'timeout',
+description: 'Timeout un membre',
+options: [
+    {
+    name: 'membre',
+    description: 'Le membre que vous voulez timeout.',
+    type: ApplicationCommandOptionType.Mentionable,
+    required: true,
+    },
+    {
+    name: 'durée',
+    description: 'durée du timeout (30m, 1h, 1 jour).',
+    type: ApplicationCommandOptionType.String,
+    required: true,
+    },
+    {
+    name: 'raison',
+    description: 'La raison du timeout',
+    type: ApplicationCommandOptionType.String,
+    },
+],
+permissionsRequired: [PermissionFlagsBits.MuteMembers],
+botPermissions: [PermissionFlagsBits.MuteMembers],
+};
