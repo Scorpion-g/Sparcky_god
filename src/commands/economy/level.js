@@ -3,6 +3,7 @@
     Interaction,
     ApplicationCommandOptionType,
     AttachmentBuilder,
+    Partials,
     } = require('discord.js');
     const calculateLevelXp = require('../../utils/calculateLevelXp');
     const Level = require('../../models/Level');
@@ -56,22 +57,25 @@
 
         Font.loadDefault();
         const rank = new RankCardBuilder()
-        .setAvatar(targetUserObj.user.displayAvatarURL({ size: 256 }))
-        .setRank(currentRank)
-        .setLevel(fetchedLevel.level)
-        .setCurrentXP(fetchedLevel.xp)
-        .setRequiredXP(calculateLevelXp(fetchedLevel.level))
-        .setStyles({
-            progressbar: {
-                thumb: {
-                style: {
-                    backgroundColor: "#FFC300"
-                }
-                }
-            },
-            })
-        .setUsername(targetUserObj.user.username)
-        .setDisplayName(targetUserObj.user.displayName);
+			.setAvatar(targetUserObj.user.displayAvatarURL({ size: 256 }))
+			.setRank(currentRank)
+			.setLevel(fetchedLevel.level)
+			.setBackground(
+				'/home/scorpion/Sparcky_god/wp1891982-hajime-no-ippo-wallpapers.png'
+			)
+			.setCurrentXP(fetchedLevel.xp)
+			.setRequiredXP(calculateLevelXp(fetchedLevel.level))
+			.setStyles({
+				progressbar: {
+					thumb: {
+						style: {
+							backgroundColor: '#FFC300',
+						},
+					},
+				},
+			})
+			.setUsername(targetUserObj.user.username)
+			.setDisplayName(targetUserObj.user.displayName);
 
         const data = await rank.build();
         const attachment = new AttachmentBuilder(data);
