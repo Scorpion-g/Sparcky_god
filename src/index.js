@@ -15,7 +15,7 @@ const client = new Client({
 });
 new CommandHandler({
 	client,
-	commandsPath: path.join(__dirname, 'commands/subcommands'),
+	commandsPath: path.join(__dirname, '/subcommands'),
 });
 
 (async () => {
