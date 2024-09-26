@@ -4,12 +4,14 @@ const {
 	Client,
 } = require('discord.js');
 const Warn = require('../../models/Warn');
-
+const cooldowns = new Set();
+const nbWarn= 0;
 module.exports = {
 	/**
 	 *
 	 * @param {Client} client
 	 * @param {Interaction} interaction
+	 * 
 	 *
 	 */
 	name: 'warn',
@@ -81,33 +83,34 @@ module.exports = {
 		try {
 			const warn = await Warn.findOne(query);
 			if (warn) {
-				const nbWarn = nbWarn + 1;
-				warn.warn = nbWarn;
-
+				warn.warn+=nbWarn+1;
 				await warn.save().catch(e => {
 					console.log(`erreur sauvegarde mise à jour level ${e}`);
 					return;
 				});
-				cooldowns.add(message.author.id);
+				cooldowns.add(interaction.member.id);
 				setTimeout(() => {
-					cooldowns.delete(message.author.id);
+					cooldowns.delete(interaction.member.id);
 				}, 60000);
+				await interaction.editReply(
+					`Le membre ${member} a été warn \nRaison: ${raison}`
+				);
 			} else {
 				const newWarn = new Warn({
-					userId: message.author.id,
-					guildId: message.guild.id,
+					userId: interaction.member.id,
+					guildId: interaction.guild.id,
 					warn: warn,
 				});
 
 				await newWarn.save();
-				cooldowns.add(message.author.id);
+				cooldowns.add(interaction.member.id);
 				setTimeout(() => {
-					cooldowns.delete(message.author.id);
+					cooldowns.delete(interaction.member.id);
 				}, 60000);
-
 				await interaction.editReply(
 					`Le membre ${member} a été warn \nRaison: ${raison}`
 				);
+				
 			}
 		} catch (error) {
 			console.log(`Erreur dans le warn : ${error}`);
