@@ -4,7 +4,7 @@ module.exports = {
     //devOnly: Boolean,
     //testOnly:Boolean,
     //options: Object[],
-    //dleted: true,
+    delete: true,
 
 
     callback: async (client, interaction) =>{
