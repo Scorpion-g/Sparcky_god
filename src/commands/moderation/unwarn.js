@@ -25,19 +25,18 @@ module.exports = {
 			required: true,
 			type: ApplicationCommandOptionType.Mentionable,
 		},
-        {
-            name: 'nombre',
-            description:'nombre de warn à enlever',
-            required:true,
-            type: ApplicationCommandOptionType.Integer,
-        },
+		{
+			name: 'nombre',
+			description: 'nombre de warn à enlever',
+			required: true,
+			type: ApplicationCommandOptionType.Integer,
+		},
 		{
 			name: 'raison',
 			description: 'La raison de l avertissement du membre',
 			required: false,
 			type: ApplicationCommandOptionType.String,
 		},
-        
 	],
 	permissionsRequired: [PermissionFlagsBits.KickMembers],
 	botPermissions: [PermissionFlagsBits.KickMembers],
@@ -50,7 +49,7 @@ module.exports = {
 		await interaction.deferReply();
 
 		const member = await interaction.guild.members.fetch(membreId);
-        const nbUnwarn= interaction.options.get('nombre').value;
+		const nbUnwarn = interaction.options.get('nombre').value;
 		if (!member) {
 			await interaction.editReply(
 				"Le membre mentionné n'est pas sur le serveur"
@@ -90,15 +89,16 @@ module.exports = {
 		try {
 			const warn = await Warn.findOne(query);
 			if (warn) {
-                if (warn.warn>0){
-				warn.warn += nbWarn - nbUnwarn;
-                await interaction.editReply(
-					`Le membre ${member} a été unwarn \nRaison: ${raison}`
-				);
-            }
-            else{
-                await interaction.editReply(`Vous ne pouvez pas enlever un warn à ${member} car il n'en possède pas!`)
-            }
+				if (warn.warn > 0) {
+					warn.warn += nbWarn - nbUnwarn;
+					await interaction.editReply(
+						`Le membre ${member} a été unwarn \nRaison: ${raison}`
+					);
+				} else {
+					await interaction.editReply(
+						`Vous ne pouvez pas enlever un warn à ${member} car il n'en possède pas!`
+					);
+				}
 				await warn.save().catch(e => {
 					console.log(`erreur sauvegarde mise à jour level ${e}`);
 					return;
@@ -107,13 +107,12 @@ module.exports = {
 				setTimeout(() => {
 					cooldowns.delete(interaction.member.id);
 				}, 60000);
-				
 			} else {
 				const newWarn = new Warn({
 					userId: interaction.member.id,
 					guildId: interaction.guild.id,
 					warn: warn,
-                    raison: raison,
+					raison: raison,
 				});
 
 				await newWarn.save();
