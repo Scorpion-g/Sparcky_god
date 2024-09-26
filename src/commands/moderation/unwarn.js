@@ -5,17 +5,17 @@ const {
 } = require('discord.js');
 const Warn = require('../../models/Warn');
 const cooldowns = new Set();
-const nbWarn= 0;
+const nbWarn = 0;
 module.exports = {
 	/**
 	 *
 	 * @param {Client} client
 	 * @param {Interaction} interaction
-	 * 
+	 *
 	 *
 	 */
-	name: 'warn',
-	description: 'Pour warn un membre du serveur',
+	name: 'unwarn',
+	description: 'Pourenlver un warn à un membre du serveur',
 	//devOnly: Boolean,
 	//testOnly:Boolean,
 	options: [
@@ -25,12 +25,19 @@ module.exports = {
 			required: true,
 			type: ApplicationCommandOptionType.Mentionable,
 		},
+        {
+            name: 'nombre',
+            description:'nombre de warn à enlever',
+            required:true,
+            type: ApplicationCommandOptionType.Integer,
+        },
 		{
 			name: 'raison',
 			description: 'La raison de l avertissement du membre',
 			required: false,
 			type: ApplicationCommandOptionType.String,
 		},
+        
 	],
 	permissionsRequired: [PermissionFlagsBits.KickMembers],
 	botPermissions: [PermissionFlagsBits.KickMembers],
@@ -43,7 +50,7 @@ module.exports = {
 		await interaction.deferReply();
 
 		const member = await interaction.guild.members.fetch(membreId);
-
+        const nbUnwarn= interaction.options.get('nombre').value;
 		if (!member) {
 			await interaction.editReply(
 				"Le membre mentionné n'est pas sur le serveur"
@@ -83,7 +90,15 @@ module.exports = {
 		try {
 			const warn = await Warn.findOne(query);
 			if (warn) {
-				warn.warn+=nbWarn+1;
+                if (warn.warn>0){
+				warn.warn += nbWarn - nbUnwarn;
+                await interaction.editReply(
+					`Le membre ${member} a été unwarn \nRaison: ${raison}`
+				);
+            }
+            else{
+                await interaction.editReply(`Vous ne pouvez pas enlever un warn à ${member} car il n'en possède pas!`)
+            }
 				await warn.save().catch(e => {
 					console.log(`erreur sauvegarde mise à jour level ${e}`);
 					return;
@@ -92,15 +107,13 @@ module.exports = {
 				setTimeout(() => {
 					cooldowns.delete(interaction.member.id);
 				}, 60000);
-				await interaction.editReply(
-					`Le membre ${member} a été warn \nRaison: ${raison}`
-				);
+				
 			} else {
 				const newWarn = new Warn({
 					userId: interaction.member.id,
 					guildId: interaction.guild.id,
 					warn: warn,
-					raison: raison,
+                    raison: raison,
 				});
 
 				await newWarn.save();
@@ -111,7 +124,6 @@ module.exports = {
 				await interaction.editReply(
 					`Le membre ${member} a été warn \nRaison: ${raison}`
 				);
-				
 			}
 		} catch (error) {
 			console.log(`Erreur dans le warn : ${error}`);
