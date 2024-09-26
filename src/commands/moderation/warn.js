@@ -5,13 +5,13 @@ const {
 } = require('discord.js');
 const Warn = require('../../models/Warn');
 const cooldowns = new Set();
-const nbWarn= 0;
+const nbWarn = 0;
 module.exports = {
 	/**
 	 *
 	 * @param {Client} client
 	 * @param {Interaction} interaction
-	 * 
+	 *
 	 *
 	 */
 	name: 'warn',
@@ -83,7 +83,7 @@ module.exports = {
 		try {
 			const warn = await Warn.findOne(query);
 			if (warn) {
-				warn.warn+=nbWarn+1;
+				warn.warn += nbWarn + 1;
 				await warn.save().catch(e => {
 					console.log(`erreur sauvegarde mise à jour level ${e}`);
 					return;
@@ -111,7 +111,6 @@ module.exports = {
 				await interaction.editReply(
 					`Le membre ${member} a été warn \nRaison: ${raison}`
 				);
-				
 			}
 		} catch (error) {
 			console.log(`Erreur dans le warn : ${error}`);
