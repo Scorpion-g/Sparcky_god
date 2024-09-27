@@ -1,5 +1,4 @@
 const { Schema, model } = require('mongoose');
-const unwarn = require('../commands/moderation/unwarn');
 
 const warnSchema = new Schema({
 	userId: {
@@ -16,7 +15,7 @@ const warnSchema = new Schema({
 	},
 	unwarn: {
 		type: Number,
-		default:0,
+		default: 0,
 	},
 	raison: {
 		type: [String],
