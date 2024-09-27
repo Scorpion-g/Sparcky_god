@@ -85,9 +85,6 @@ module.exports = {
 			if (warn) {
 				warn.raison.push(raison);
 				warn.warn += nbWarn + 1;
-				if (warn.warn ==0) {
-					warn.raison=[]
-				}
 				await warn.save().catch(e => {
 					console.log(`erreur sauvegarde mise à jour level ${e}`);
 					return;
@@ -103,7 +100,7 @@ module.exports = {
 				const newWarn = new Warn({
 					userId: member.id,
 					guildId: interaction.guild.id,
-					warn: warn,
+					warn: warn.warn,
 					raison: [raison],
 				});
 				await newWarn.save();

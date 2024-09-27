@@ -90,19 +90,21 @@ module.exports = {
 			const warn = await Warn.findOne(query);
 			if (warn) {
 				warn.raison.push(raison);
-				if (
-					-nbUnwarn <= warn.warn &&
-					nbUnwarn <= warn.warn &&
-					warn.warn != 0
-				) {
+				if (warn.warn <= 0 || warn.warn == null) {
+					await interaction.editReply(
+						`${member} n'as plus de warn à son actif!`
+					);
+				} else if (warn.warn < nbUnwarn) {
+					await interaction.editReply(
+						`Comme ${nbUnwarn}>${warn.warn} les warns de ${member} ont été mis à 0!`
+					);
+					warn.warn = 0;
+				} else {
 					warn.warn += nbWarn - nbUnwarn;
 					warn.unwarn += nbUnwarn;
+					warn.raison.push("unwarn: "+raison);
 					await interaction.editReply(
-						`Le membre ${member} a été unwarn \nRaison: ${raison}`
-					);
-				} else {
-					await interaction.editReply(
-						`Vous ne pouvez pas enlever ${nbUnwarn} warn à ${member} car il n'en possède que ${warn.warn}!`
+						`Le membre ${member} a été unwarn (${nbUnwarn}) \nRaison: ${raison}`
 					);
 				}
 				await warn.save().catch(e => {
@@ -114,20 +116,8 @@ module.exports = {
 					cooldowns.delete(member.id);
 				}, 60000);
 			} else {
-				const newWarn = new Warn({
-					userId: member.id,
-					guildId: interaction.guild.id,
-					warn: warn,
-					raison: 'unwarn:' + raison,
-				});
-
-				await newWarn.save();
-				cooldowns.add(member.id);
-				setTimeout(() => {
-					cooldowns.delete(member.id);
-				}, 60000);
 				await interaction.editReply(
-					`Le membre ${member} a été unwarn \nRaison: ${raison}`
+					`Le membre ${member} n'as jamais été warn vous ne pouvez donc pas l'unwarn.`
 				);
 			}
 		} catch (error) {
