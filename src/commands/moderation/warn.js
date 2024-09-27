@@ -2,6 +2,7 @@ const {
 	ApplicationCommandOptionType,
 	PermissionFlagsBits,
 	Client,
+	EmbedBuilder,
 } = require('discord.js');
 const Warn = require('../../models/Warn');
 const cooldowns = new Set();
@@ -93,14 +94,29 @@ module.exports = {
 				setTimeout(() => {
 					cooldowns.delete(member.id);
 				}, 60000);
-				await interaction.editReply(
-					`Le membre ${member} a été warn \nRaison: ${raison}.\nIl a maintenant ${warn.warn} warn!`
-				);
+
+				const embed = new EmbedBuilder()
+					.setColor('#0099ff')
+					.setTitle('Warn')
+					.setDescription(`Le membre ${member} a été warn `)
+					.addFields(
+						{
+							name: 'Raison',
+							value: `${raison}`,
+							inline: false,
+						},
+						{
+							name: 'Nombre de warn',
+							value: `${warn.warn}`,
+						}
+					);
+
+				interaction.editReply({ embeds: [embed] });
 			} else {
 				const newWarn = new Warn({
 					userId: member.id,
 					guildId: interaction.guild.id,
-					warn: warn.warn,
+					warn: warn,
 					raison: [raison],
 				});
 				await newWarn.save();
@@ -108,9 +124,23 @@ module.exports = {
 				setTimeout(() => {
 					cooldowns.delete(member.id);
 				}, 60000);
-				await interaction.editReply(
-					`Le membre ${member} a été warn \nRaison: ${raison}.\nIl a maintenant ${warn.warn} warn!`
-				);
+				const embed = new EmbedBuilder()
+					.setColor('#0099ff')
+					.setTitle('Warn')
+					.setDescription(`Le membre ${member} a été warn `)
+					.addFields(
+						{
+							name: 'Raison',
+							value: `${raison}`,
+							inline: false,
+						},
+						{
+							name: 'Nombre de warn',
+							value: `${warn.warn}`,
+						}
+					);
+
+				interaction.editReply({ embeds: [embed] });
 			}
 		} catch (error) {
 			console.log(`Erreur dans le warn : ${error}`);

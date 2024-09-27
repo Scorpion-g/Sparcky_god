@@ -2,6 +2,7 @@ const {
 	ApplicationCommandOptionType,
 	PermissionFlagsBits,
 	Client,
+	EmbedBuilder,
 } = require('discord.js');
 const Warn = require('../../models/Warn');
 const cooldowns = new Set();
@@ -103,9 +104,24 @@ module.exports = {
 					warn.warn += nbWarn - nbUnwarn;
 					warn.unwarn += nbUnwarn;
 					warn.raison.push("unwarn: "+raison);
-					await interaction.editReply(
-						`Le membre ${member} a été unwarn (${nbUnwarn}) \nRaison: ${raison}`
-					);
+					const embed = new EmbedBuilder()
+						.setColor('#0099ff')
+						.setTitle('Unwarn')
+						.setDescription(
+							`Le membre ${member} a été unwarn `
+						)
+						.addFields({
+							name: 'Raison',
+							value: `${raison}`,
+							inline: false,
+						},
+						{
+							name:`Nombre d'unwarn`,
+							value:`${nbUnwarn}`
+						}
+					)
+					
+					interaction.editReply({ embeds: [embed] });
 				}
 				await warn.save().catch(e => {
 					console.log(`erreur sauvegarde mise à jour level ${e}`);
