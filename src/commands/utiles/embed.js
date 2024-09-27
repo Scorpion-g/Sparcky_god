@@ -1,4 +1,4 @@
-const { EmbedBuilder,ApplicationCommandOptionType } = require('discord.js');
+const { EmbedBuilder, ApplicationCommandOptionType } = require('discord.js');
 module.exports = {
 	name: 'embed',
 	description: 'Créer un embed',
@@ -6,13 +6,13 @@ module.exports = {
 		{
 			name: 'titre',
 			description: 'ajouter un titre',
-            type: ApplicationCommandOptionType.String,
+			type: ApplicationCommandOptionType.String,
 			required: true,
 		},
 		{
 			name: 'description',
 			description: 'ajouter une descritpion',
-            type: ApplicationCommandOptionType.String,
+			type: ApplicationCommandOptionType.String,
 			required: true,
 		},
 	],
@@ -21,20 +21,22 @@ module.exports = {
 	//options: Object[],
 
 	callback: async (client, interaction) => {
-        const title= interaction.options.get('titre').value;
-        const description= interaction.options.get('description').value;
-		const embed = new EmbedBuilder()
-			.setColor('#0099ff')
-			.setTitle(title)
-			.setDescription(description)
-			.addFields({ name: 'title', value: 'value', inline: false });
-        
-        
-        try {
-            await interaction.deferReply({ embeds: [embed] });
-        } catch (error) {
-            console.log(`Il y a une erreur: ${error}`)
-        }
-		
+		const title = interaction.options.get('titre').value;
+		const description = interaction.options.get('description').value;
+		const author = interaction.author.value
+		try {
+			const embed = new EmbedBuilder()
+				.setColor('#0099ff')
+				.setTitle(title)
+				.setDescription(description)
+				.addFields(
+					{ name: 'title', value: 'value', inline: false },
+				)
+			
+
+			interaction.reply({ embeds: [embed] });
+		} catch (error) {
+			console.log(`Il y a une erreur: ${error}`);
+		}
 	},
 };
