@@ -77,39 +77,42 @@ module.exports = {
 			return;
 		}
 		const query = {
-			userId: interaction.member.id,
+			userId: member.id,
 			guildId: interaction.guild.id,
 		};
 		try {
 			const warn = await Warn.findOne(query);
 			if (warn) {
+				warn.raison.push(raison);
 				warn.warn += nbWarn + 1;
+				if (warn.warn ==0) {
+					warn.raison=[]
+				}
 				await warn.save().catch(e => {
 					console.log(`erreur sauvegarde mise à jour level ${e}`);
 					return;
 				});
-				cooldowns.add(interaction.member.id);
+				cooldowns.add(member.id);
 				setTimeout(() => {
-					cooldowns.delete(interaction.member.id);
+					cooldowns.delete(member.id);
 				}, 60000);
 				await interaction.editReply(
-					`Le membre ${member} a été warn \nRaison: ${raison}`
+					`Le membre ${member} a été warn \nRaison: ${raison}.\nIl a maintenant ${warn.warn} warn!`
 				);
 			} else {
 				const newWarn = new Warn({
-					userId: interaction.member.id,
+					userId: member.id,
 					guildId: interaction.guild.id,
 					warn: warn,
-					raison: raison,
+					raison: [raison],
 				});
-
 				await newWarn.save();
-				cooldowns.add(interaction.member.id);
+				cooldowns.add(member.id);
 				setTimeout(() => {
-					cooldowns.delete(interaction.member.id);
+					cooldowns.delete(member.id);
 				}, 60000);
 				await interaction.editReply(
-					`Le membre ${member} a été warn \nRaison: ${raison}`
+					`Le membre ${member} a été warn \nRaison: ${raison}.\nIl a maintenant ${warn.warn} warn!`
 				);
 			}
 		} catch (error) {
