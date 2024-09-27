@@ -9,6 +9,7 @@ module.exports = {
      */
     name: 'unban',
     description: 'Pour debannir un membre du serveur',
+    delete: true,
     //devOnly: Boolean,
     //testOnly:Boolean,
     options: [
@@ -29,7 +30,7 @@ module.exports = {
     botPermissions: [PermissionFlagsBits.Administrator],
 
     callback: async (client, interaction) =>{
-        const membreId = interaction.options.get('membre').value;
+        const membreId = interaction.options.get('membre').id.value;
         const raison = interaction.options.get('raison')?.value || "Pas de raison donné";
 
         await interaction.deferReply();
@@ -41,7 +42,7 @@ module.exports = {
             return;
         }
         try {
-            await member.unban({ raison });
+            await member.unban(membreId);
             await interaction.editReply(
                 `Le membre ${member} a été banni \nRaison: ${raison}`             
             )
