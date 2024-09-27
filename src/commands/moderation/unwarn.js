@@ -83,45 +83,51 @@ module.exports = {
 			return;
 		}
 		const query = {
-			userId: interaction.member.id,
+			userId: member.id,
 			guildId: interaction.guild.id,
 		};
 		try {
 			const warn = await Warn.findOne(query);
 			if (warn) {
-				if (warn.warn > 0) {
+				warn.raison.push(raison);
+				if (
+					-nbUnwarn <= warn.warn &&
+					nbUnwarn <= warn.warn &&
+					warn.warn != 0
+				) {
 					warn.warn += nbWarn - nbUnwarn;
+					warn.unwarn += nbUnwarn;
 					await interaction.editReply(
 						`Le membre ${member} a été unwarn \nRaison: ${raison}`
 					);
 				} else {
 					await interaction.editReply(
-						`Vous ne pouvez pas enlever un warn à ${member} car il n'en possède pas!`
+						`Vous ne pouvez pas enlever ${nbUnwarn} warn à ${member} car il n'en possède que ${warn.warn}!`
 					);
 				}
 				await warn.save().catch(e => {
 					console.log(`erreur sauvegarde mise à jour level ${e}`);
 					return;
 				});
-				cooldowns.add(interaction.member.id);
+				cooldowns.add(member.id);
 				setTimeout(() => {
-					cooldowns.delete(interaction.member.id);
+					cooldowns.delete(member.id);
 				}, 60000);
 			} else {
 				const newWarn = new Warn({
-					userId: interaction.member.id,
+					userId: member.id,
 					guildId: interaction.guild.id,
 					warn: warn,
-					raison: raison,
+					raison: 'unwarn:' + raison,
 				});
 
 				await newWarn.save();
-				cooldowns.add(interaction.member.id);
+				cooldowns.add(member.id);
 				setTimeout(() => {
-					cooldowns.delete(interaction.member.id);
+					cooldowns.delete(member.id);
 				}, 60000);
 				await interaction.editReply(
-					`Le membre ${member} a été warn \nRaison: ${raison}`
+					`Le membre ${member} a été unwarn \nRaison: ${raison}`
 				);
 			}
 		} catch (error) {
