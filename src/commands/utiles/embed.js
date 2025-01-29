@@ -1,5 +1,13 @@
 const { EmbedBuilder, ApplicationCommandOptionType } = require('discord.js');
 module.exports = {
+    /**
+     *
+     *
+     * @param {Client} client
+     * @param {Interaction} interaction
+     * 
+     *
+     */ 
 	name: 'embed',
 	description: 'Créer un embed',
 	options: [
@@ -22,16 +30,14 @@ module.exports = {
 
 	callback: async (client, interaction) => {
 		const title = interaction.options.get('titre').value;
+		
 		const description = interaction.options.get('description').value;
 		const author = interaction.author.value
 		try {
 			const embed = new EmbedBuilder()
 				.setColor('#0099ff')
-				.setTitle(title)
-				.setDescription(description)
-				.addFields(
-					{ name: 'title', value: 'value', inline: false },
-				)
+				.setTitle(`${title}`)
+				.setDescription(`${description}`)
 			
 
 			interaction.reply({ embeds: [embed] });

@@ -1,15 +1,15 @@
-const {
+/**const {
 	SlashCommandBuilder,
 	ChannelType,
 	ChatInputCommandInteraction,
 } = require('discord.js');
-const GuildConfiguration = require('../../models/GuildConfiguration');
+//const GuildConfiguration = require('../../models/GuildConfiguration');
 module.exports = {
 	/**
 	 *
 	 * @param {Object} param0
 	 * @param {ChatInputCommandInteraction} param0.interaction
-	 */
+	 
 	run: async ({ interaction }) => {
 		if (!interaction.memberPermssions.has('Administrator')) {
 			interaction.reply(
@@ -102,4 +102,4 @@ module.exports = {
 				.addChannelTypes(ChannelType.GuildText)
 				.setRequired(true)
 		),
-};
+};*/
