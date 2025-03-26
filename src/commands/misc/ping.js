@@ -1,13 +1,12 @@
 module.exports = {
-    name: 'ping',
-    description: 'Retourne votre ping',
+    name: "ping",
+    description: "Retourne votre ping",
     //devOnly: Boolean,
     //testOnly:Boolean,
     //options: Object[],
-    delete: true,
+    delete: false,
 
-
-    callback: async (client, interaction) =>{
+    callback: async (client, interaction) => {
         await interaction.deferReply();
 
         const reply = await interaction.fetchReply();
@@ -15,8 +14,7 @@ module.exports = {
         const ping = reply.createdTimestamp - interaction.createdTimestamp;
 
         interaction.editReply(
-            `Pong! Client ${ping}ms | Websocket: ${client.ws.ping}ms`
+            `Pong! Client ${ping}ms | Websocket: ${client.ws.ping}ms`,
         );
-
     },
 };
