@@ -1,10 +1,10 @@
-const { SlashCommandBuilder } = require('discord.js');
+const { SlashCommandBuilder } = require("discord.js");
 
 module.exports = {
-	deleted:true,
-	data: new SlashCommandBuilder().setName('ping').setDescription('Pong!'),
+    deleted: false,
+    data: new SlashCommandBuilder().setName("ping").setDescription("Pong!"),
 
-	run: ({ interaction, client, handler }) => {
-		interaction.reply(`Pong! ${client.ws.ping}ms`);
-	},
+    run: ({ interaction, client, handler }) => {
+        interaction.reply(`Pong! ${client.ws.ping}ms`);
+    },
 };
