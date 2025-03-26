@@ -14,6 +14,10 @@ pids
 # Env
 .env
 mdp database.txt
+config.json
+package.json
+package-lock.json
+config-suggestion_backup.txt
 # Dist
 dist
 dist-docs
