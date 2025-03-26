@@ -13,7 +13,7 @@ pids
 
 # Env
 .env
-
+mdp database.txt
 # Dist
 dist
 dist-docs
