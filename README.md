@@ -1,1 +1,0 @@
-# Sparcky_god
