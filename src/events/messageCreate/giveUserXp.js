@@ -14,7 +14,9 @@ function getRandomXp(min, max) {
  * @param {Message} message
  */
 
-module.exports = async (client, message) => {
+module.exports= { 
+  name: "giveUserXp",
+  async execute(client, message)  {
 	if (
 		!message.inGuild() ||
 		message.author.bot ||
@@ -68,4 +70,4 @@ module.exports = async (client, message) => {
 	} catch (error) {
 		console.log(`Erreur dans le don d'xp : ${error}`);
 	}
-};
+}};

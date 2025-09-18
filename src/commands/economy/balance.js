@@ -1,21 +1,20 @@
-const {ApplicationCommandOptionType, Client, Interaction} = require('discord.js');
+const {SlashCommandBuilder,ApplicationCommandOptionType, Client, Interaction} = require('discord.js');
 const User = require('../../models/User');
 module.exports = {
-    name: 'money',
-    description: "Voir votre argent ou celui d'un membre.",
-    options: [
-        {
-            name: 'user',
-            description : "Le membre dont vous voulez voir l'argent.",
-            type : ApplicationCommandOptionType.User,
-        }
-    ],
-    /**
+  data : new SlashCommandBuilder()
+    .setName('money')
+    .setDescription("Voir votre argent ou celui d'un membre.")
+    .addUserOption(option =>
+        option.setName('user')
+            .setDescription("Le membre dont vous voulez voir l'argent.")
+            .setRequired(false)
+    ),
+   /**
      * 
      * @param {Client} client 
      * @param {Interaction} interaction 
      */
-    callback : async(client , interaction) =>{
+     async execute(interaction) {
         if(!interaction.inGuild()){
             interaction.reply({ content:"Vous ne pouvez éxecuter cette commande en dehors d'un serveur", ephemeral : true
             });

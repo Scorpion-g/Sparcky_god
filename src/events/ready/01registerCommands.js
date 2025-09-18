@@ -1,55 +1,71 @@
-const { testServer } = require('../../../config.json');
-const areCommandsDifferent = require('../../utils/areCommandsDifferent');
-const getApplicationCommands = require('../../utils/getApplicationCommands');
-const getLocalCommands = require('../../utils/getLocalCommands');
+const { testServer } = require("../../../config.json");
+const getLocalCommands = require("../../utils/getLocalCommands");
+const areCommandsDifferent = require("../../utils/areCommandsDifferent");
+const getApplicationCommands = require("../../utils/getApplicationCommands");
 
-module.exports = async client => {
-	try {
-		const localCommands = getLocalCommands();
-		const applicationCommands = await getApplicationCommands(
-			client,
-			testServer
-		);
+module.exports = {
+  name: "registerCommands",
+  async execute(client) {
+    try {
+      const localCommands = getLocalCommands();
+      const applicationCommands = await getApplicationCommands(
+        client,
+        testServer,
+      );
 
-		for (const localCommand of localCommands) {
-			const { name, description, options } = localCommand;
+      for (const localCommand of localCommands) {
+        const commandData = localCommand.data.toJSON();
 
-			const existingCommand = await applicationCommands.cache.find(
-				cmd => cmd.name === name
-			);
+        if (!commandData.name || !commandData.description) {
+          console.log(
+            `⚠️ Commande ignorée car name ou description manquant:`,
+            localCommand,
+          );
+          continue;
+        }
 
-			if (existingCommand) {
-				if (localCommand.deleted) {
-					await applicationCommands.deleted(existingCommand.id);
-					console.log(`La commande ${name} a été suprimé.`);
-					continue;
-				}
+        const existingCommand = applicationCommands.cache.find(
+          (cmd) => cmd.name === commandData.name,
+        );
 
-				if (areCommandsDifferent(existingCommand, localCommand)) {
-					await applicationCommands.edit(existingCommand.id, {
-						description,
-						options,
-					});
-					console.log(`Modification de la commande "${name}".`);
-				}
-			} else {
-				if (localCommand.deleted) {
-					console.log(
-						`Passage de l'enregistrement de la commande "${name}" comme elle a été suprimé.`
-					);
-					continue;
-				}
+        if (existingCommand) {
+          if (localCommand.deleted) {
+            await applicationCommands.delete(existingCommand.id);
+            console.log(`La commande "${commandData.name}" a été supprimée.`);
+            // Retirer de la collection locale si elle existait
+            client.commands.delete(commandData.name);
+            continue;
+          }
 
-				await applicationCommands.create({
-					name,
-					description,
-					options,
-				});
+          if (areCommandsDifferent(existingCommand, commandData)) {
+            await applicationCommands.edit(existingCommand.id, commandData);
+            console.log(`Modification de la commande "${commandData.name}".`);
+          }
 
-				console.log(`enregistrement de "${name}" 👌.`);
-			}
-		}
-	} catch (error) {
-		console.log(`Il y a une erreur ${error}`);
-	}
+          // Ajout ou mise à jour dans client.commands
+          client.commands.set(commandData.name, localCommand);
+        } else {
+          if (localCommand.deleted) {
+            console.log(
+              `Commande "${commandData.name}" ignorée car marquée supprimée.`,
+            );
+            continue;
+          }
+
+          console.log("Création de la commande :", commandData);
+          await applicationCommands.create(commandData);
+          console.log(`Enregistrement de "${commandData.name}" ✅`);
+
+          // Ajout dans client.commands
+          client.commands.set(commandData.name, localCommand);
+        }
+      }
+
+      console.log(
+        `✅ Toutes les commandes locales ont été synchronisées et ajoutées à client.commands.`,
+      );
+    } catch (error) {
+      console.error("Erreur lors de la synchronisation des commandes :", error);
+    }
+  },
 };

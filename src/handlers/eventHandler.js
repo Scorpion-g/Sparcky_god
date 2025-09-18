@@ -1,23 +1,24 @@
+const fs = require('fs');
 const path = require('path');
-const getAllFiles = require('../utils/getAllFiles');
 
-module.exports = client => {
-	const eventFolders = getAllFiles(
-		path.join(__dirname, '..', 'events'),
-		true
-	);
+module.exports = (client) => {
+  const eventsPath = path.join(__dirname, '../events');
+  const eventFolders = fs.readdirSync(eventsPath);
 
-	for (const eventFolder of eventFolders) {
-		const eventFiles = getAllFiles(eventFolder);
-		eventFiles.sort((a, b) => a > b);
+  for (const folder of eventFolders) {
+    const folderPath = path.join(eventsPath, folder);
+    const eventFiles = fs.readdirSync(folderPath).filter(f => f.endsWith('.js'));
 
-		const eventName = eventFolder.replace(/\\/g, '/').split('/').pop();
+    for (const file of eventFiles) {
+      const event = require(path.join(folderPath, file));
+      console.log(`Chargement de l'event: ${event.name}`);
 
-		client.on(eventName, async arg => {
-			for (const eventFile of eventFiles) {
-				const eventFunction = require(eventFile);
-				await eventFunction(client, arg);
-			}
-		});
-	}
+      if (event.once) {
+        client.once(event.name, (...args) => event.execute(client, ...args));
+      } else {
+        client.on(event.name, (...args) => event.execute(client, ...args));
+      }
+    }
+  }
 };
+

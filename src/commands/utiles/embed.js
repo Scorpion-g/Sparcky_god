@@ -1,43 +1,42 @@
-const { EmbedBuilder, ApplicationCommandOptionType } = require("discord.js");
+const {
+  EmbedBuilder,
+  ApplicationCommandOptionType,
+  SlashCommandBuilder,
+} = require("discord.js");
 module.exports = {
-    /**
-     *
-     *
-     * @param {Client} client
-     * @param {Interaction} interaction
-     *
-     *
-     */
-    name: "embed",
-    description: "Créer un embed",
-    options: [
-        {
-            name: "titre",
-            description: "ajouter un titre",
-            required: true,
-            type: ApplicationCommandOptionType.String,
-        },
-        {
-            name: "description",
-            description: "ajouter une descritpion",
-            required: true,
-            type: ApplicationCommandOptionType.String,
-        },
-    ],
-    //devOnly: Boolean,
-    //testOnly:Boolean,
-    //options: Object[],
+  data: new SlashCommandBuilder()
+    .setName("embed")
+    .setDescription("Créer un embed")
+    .addStringOption((option) =>
+      option
+        .setName("titre")
+        .setDescription("ajouter un titre")
+        .setRequired(true),
+    )
+    .addStringOption((option) =>
+      option
+        .setName("description")
+        .setDescription("ajouter une descritpion")
+        .setRequired(true),
+    ),
+  async execute(interaction) {
+    const title = interaction.options.getString("titre");
+    const description = interaction.options.getString("description");
+    const author = interaction.user;
+    try {
+      const embed = new EmbedBuilder()
+        .setColor("#0099ff")
+        .setAuthor({
+          name: author.username,
+          iconURL: author.displayAvatarURL(),
+        })
+        .setTitle(`${title}`)
+        .setDescription(`${description}`)
+        .setTimestamp();
 
-    callback: async (client, interaction) => {
-        const title = interaction.options.get("titre").value;
-        const description = interaction.options.get("description").value;
-        const author = interaction.author.value;
-        try {
-            const embed = new EmbedBuilder().setColor("#0099ff");
-
-            interaction.reply({ embeds: [embed] });
-        } catch (error) {
-            console.log(`Il y a une erreur dans embed: ${error}`);
-        }
-    },
+      interaction.reply({ embeds: [embed] });
+    } catch (error) {
+      console.log(`Il y a une erreur dans embed: ${error}`);
+    }
+  },
 };

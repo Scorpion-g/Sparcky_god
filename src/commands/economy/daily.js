@@ -1,18 +1,14 @@
-const {Client, Interaction,} = require('discord.js')
-const User = require('../../models/User')
+const {SlashCommandBuilder,Client, Interaction,} = require('discord.js')
+const User = require('../../models/User');
 
 const dailyAmount = 500;
 
 
 module.exports = {
-    name : 'daily',
-    description: "Récupère ta récomprense du jour",
-    /**
-     * 
-     * @param {Client} client 
-     * @param {Interaction} interaction 
-     */
-    callback : async(client,interaction) =>{
+  data : new SlashCommandBuilder()
+    .setName('daily')
+    .setDescription("Récupérer votre récompense journalière de 500 $."),
+    async execute(interaction) {
         if(!interaction.inGuild()){
             interaction.reply({ content:"Vous ne pouvez éxecuter cette commande en dehors d'un serveur", ephemeral : true
             });

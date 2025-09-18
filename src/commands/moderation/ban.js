@@ -2,6 +2,7 @@ const {
   ApplicationCommandOptionType,
   PermissionFlagsBits,
   Client,
+  SlashCommandBuilder,
 } = require("discord.js");
 
 module.exports = {
@@ -11,28 +12,23 @@ module.exports = {
    * @param {Interaction} interaction
    *
    */
-  name: "ban",
-  description: "Pour bannir un membre du serveur",
-  //devOnly: Boolean,
-  //testOnly:Boolean,
-  options: [
-    {
-      name: "membre",
-      description: "Bannir un membre",
-      required: true,
-      type: ApplicationCommandOptionType.Mentionable,
-    },
-    {
-      name: "raison",
-      description: "La raison du bannissement du membre",
-      required: false,
-      type: ApplicationCommandOptionType.String,
-    },
-  ],
-  permissionsRequired: [PermissionFlagsBits.BanMembers],
-  botPermissions: [PermissionFlagsBits.BanMembers],
-
-  callback: async (client, interaction) => {
+  data: new SlashCommandBuilder()
+    .setName("ban")
+    .setDescription("Pour bannir un membre du serveur")
+    .addMentionableOption((option) =>
+      option
+        .setName("membre")
+        .setDescription("Bannir un membre")
+        .setRequired(true),
+    )
+    .addStringOption((option) =>
+      option
+        .setName("raison")
+        .setDescription("La raison du bannissement du membre")
+        .setRequired(false),
+    )
+    .setDefaultMemberPermissions(PermissionFlagsBits.BanMembers),
+   async execute(interaction) {
     const membreId = interaction.options.get("membre").value;
     const raison =
       interaction.options.get("raison")?.value || "Pas de raison donné";
