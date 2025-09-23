@@ -10,7 +10,7 @@
   "license": "ISC",
   "dependencies": {
     "canvacord": "^6.0.2",
-    "discord.js": "^14.16.2",
+    "discord.js": "^14.22.1",
     "djs-commander": "^0.0.50",
     "dotenv": "^16.4.5",
     "gulp": "^5.0.0",
