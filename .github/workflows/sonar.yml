@@ -27,7 +27,6 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      # Wait for SonarQube to become healthy (up to 6 minutes)
       - name: Wait for SonarQube
         run: |
           for i in {1..36}; do
@@ -35,17 +34,23 @@ jobs:
             echo "Waiting for SonarQube..."
             sleep 10
           done
+
       - name: Install sonar-scanner
         run: |
            wget -O sonar-scanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
            unzip sonar-scanner.zip
            echo "$PWD/sonar-scanner-5.0.1.3006-linux/bin" >> $GITHUB_PATH
+
       - name: SonarQube Scan
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
+          if [ -z "$SONAR_TOKEN" ]; then
+            echo "SONAR_TOKEN is not set. Please define it in GitHub secrets."
+            exit 1
+          fi
           sonar-scanner \
-          -Dsonar.host.url=http://localhost:9000 \
-          -Dsonar.login=$SONAR_TOKEN \
-          -Dsonar.projectKey=Sparcky_god \
-          -Dsonar.projectName=Sparcky_god
+            -Dsonar.host.url=http://localhost:9000 \
+            -Dsonar.login=$SONAR_TOKEN \
+            -Dsonar.projectKey=Sparcky_god \
+            -Dsonar.projectName=Sparcky_god
