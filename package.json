@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "src/index.js",
   "scripts": {
-    "test": "echo \"no test yet"",
+    "test": "echo \"no test yet\"",
     "lint": "eslint ."
   },
   "keywords": [],
