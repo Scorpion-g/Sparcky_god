@@ -16,11 +16,11 @@ jobs:
         ports:
           - 9000:9000
         options: >-
-          --memory=2g
-          --health-cmd="curl --fail http://localhost:9000/api/system/health || exit 1"
+          --memory=4g
+          --health-cmd="curl --fail http://localhost:9000 || exit 1"
           --health-interval=30s
           --health-timeout=10s
-          --health-retries=12
+          --health-retries=10
         env:
           SONAR_ES_BOOTSTRAP_CHECKS_DISABLE: "true"
 
