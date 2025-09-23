@@ -51,7 +51,6 @@ module.exports = {
             levelDoc.level,
           );
           levelDoc.level++;
-          leveledUp = true;
 
           const embed = new EmbedBuilder()
             .setColor("#00FF00")
