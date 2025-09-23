@@ -1,56 +1,27 @@
-name: CI
+name: Build
 
 on:
   push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+    branches:
+      - main
+
 
 jobs:
-  sonar:
+  build:
+    name: Build and analyze
     runs-on: ubuntu-latest
-
-    services:
-      sonarqube:
-        image: sonarqube:community
-        ports:
-          - 9000:9000
-        options: >-
-          --memory=4g
-          --health-cmd="curl --fail http://localhost:9000 || exit 1"
-          --health-interval=30s
-          --health-timeout=10s
-          --health-retries=10
-        env:
-          SONAR_ES_BOOTSTRAP_CHECKS_DISABLE: "true"
-
+    
     steps:
-      - uses: actions/checkout@v3
-
-      - name: Wait for SonarQube
-        run: |
-          for i in {1..36}; do
-            curl --fail http://localhost:9000/api/system/health && break
-            echo "Waiting for SonarQube..."
-            sleep 10
-          done
-
-      - name: Install sonar-scanner
-        run: |
-           wget -O sonar-scanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
-           unzip sonar-scanner.zip
-           echo "$PWD/sonar-scanner-5.0.1.3006-linux/bin" >> $GITHUB_PATH
-
-      - name: SonarQube Scan
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+      - uses: sonarsource/sonarqube-scan-action@master
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: |
-          if [ -z "$SONAR_TOKEN" ]; then
-            echo "SONAR_TOKEN is not set. Please define it in GitHub secrets."
-            exit 1
-          fi
-          sonar-scanner \
-            -Dsonar.host.url=http://localhost:9000 \
-            -Dsonar.login=$SONAR_TOKEN \
-            -Dsonar.projectKey=Sparcky_god \
-            -Dsonar.projectName=Sparcky_god
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+      # If you wish to fail your job when the Quality Gate is red, uncomment the
+      # following lines. This would typically be used to fail a deployment.
+      # - uses: sonarsource/sonarqube-quality-gate-action@master
+      #   timeout-minutes: 5
+      #   env:
+      #     SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
