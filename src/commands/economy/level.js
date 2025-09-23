@@ -1,87 +1,74 @@
 const {
-  Client,
-  Interaction,
-  ApplicationCommandOptionType,
   AttachmentBuilder,
-  Partials,
   SlashCommandBuilder,
 } = require("discord.js");
 const calculateLevelXp = require("../../utils/calculateLevelXp");
 const Level = require("../../models/Level");
+const { RankCardBuilder, Font } = require("canvacord");
+
+Font.loadDefault(); // Charger une seule fois
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("level")
-    .setDescription("Shows your/someone's level.")
-    .addMentionableOption((option) =>
+    .setDescription("Affiche ton niveau ou celui d'un autre membre.")
+    .addUserOption((option) =>
       option
         .setName("target-user")
-        .setDescription("The user whose level you want to see.")
+        .setDescription("Le membre dont tu veux voir le niveau")
         .setRequired(false),
     ),
+
   async execute(interaction) {
     if (!interaction.inGuild()) {
-      interaction.reply("You can only run this command inside a server.");
-      return;
+      return interaction.reply("❌ Cette commande ne peut être utilisée que dans un serveur.");
     }
 
     await interaction.deferReply();
 
-    const mentionedUserId = interaction.options.get("target-user")?.value;
-    const targetUserId = mentionedUserId || interaction.member.id;
-    const targetUserObj = await interaction.guild.members.fetch(targetUserId);
+    // Récupération de l'utilisateur
+    const targetUser = interaction.options.getUser("target-user") || interaction.user;
+    const targetMember = await interaction.guild.members.fetch(targetUser.id);
 
+    // Récupération du niveau
     const fetchedLevel = await Level.findOne({
-      userId: targetUserId,
+      userId: targetUser.id,
       guildId: interaction.guild.id,
     });
 
     if (!fetchedLevel) {
-      interaction.editReply(
-        mentionedUserId
-          ? `${targetUserObj.user.tag} doesn't have any levels yet. Try again when they chat a little more.`
-          : "You don't have any levels yet. Chat a little more and try again.",
+      return interaction.editReply(
+        targetUser.id !== interaction.user.id
+          ? `${targetUser.tag} n'a pas encore de niveau.`
+          : "Tu n'as pas encore de niveau. Envoie quelques messages et réessaie !",
       );
-      return;
     }
 
-    let allLevels = await Level.find({
-      guildId: interaction.guild.id,
-    }).select("-_id userId level xp");
+    // Classement
+    let allLevels = await Level.find({ guildId: interaction.guild.id }).select("-_id userId level xp");
 
-    allLevels.sort((a, b) => {
-      if (a.level === b.level) {
-        return b.xp - a.xp;
-      } else {
-        return b.level - a.level;
-      }
-    });
+    allLevels.sort((a, b) => (a.level === b.level ? b.xp - a.xp : b.level - a.level));
+    let currentRank = allLevels.findIndex((lvl) => lvl.userId === targetUser.id) + 1;
 
-    let currentRank =
-      allLevels.findIndex((lvl) => lvl.userId === targetUserId) + 1;
-    const { RankCardBuilder, Font } = require("canvacord");
-
-    Font.loadDefault();
+    // Génération de la RankCard
     const rank = new RankCardBuilder()
-      .setAvatar(targetUserObj.user.displayAvatarURL({ size: 256 }))
+      .setAvatar(targetUser.displayAvatarURL({ size: 256 }))
       .setRank(currentRank)
       .setLevel(fetchedLevel.level)
       .setCurrentXP(fetchedLevel.xp)
       .setRequiredXP(calculateLevelXp(fetchedLevel.level))
       .setStyles({
         progressbar: {
-          thumb: {
-            style: {
-              backgroundColor: "#FFC300",
-            },
-          },
+          thumb: { style: { backgroundColor: "#FFC300" } },
         },
       })
-      .setUsername(targetUserObj.user.username)
-      .setDisplayName(targetUserObj.user.displayName);
+      .setUsername(targetUser.username)
+      .setDisplayName(targetMember.displayName);
 
     const data = await rank.build();
-    const attachment = new AttachmentBuilder(data);
-    interaction.editReply({ files: [attachment] });
+    const attachment = new AttachmentBuilder(data, { name: "rank.png" });
+
+    return interaction.editReply({ files: [attachment] });
   },
 };
+

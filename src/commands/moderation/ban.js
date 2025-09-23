@@ -3,8 +3,10 @@ const {
   PermissionFlagsBits,
   Client,
   SlashCommandBuilder,
+  EmbedBuilder,
 } = require("discord.js");
 
+const GuildConfiguration = require("../../models/GuildConfiguration");
 module.exports = {
   /**
    *
@@ -28,7 +30,7 @@ module.exports = {
         .setRequired(false),
     )
     .setDefaultMemberPermissions(PermissionFlagsBits.BanMembers),
-   async execute(interaction) {
+  async execute(interaction) {
     const membreId = interaction.options.get("membre").value;
     const raison =
       interaction.options.get("raison")?.value || "Pas de raison donné";
@@ -72,6 +74,32 @@ module.exports = {
       await interaction.editReply(
         `Le membre ${member} a été banni \nRaison: ${raison}`,
       );
+      await member
+        .send(
+          `Tu as été banni du serveur ${interaction.guild.name} par ${interaction.user.tag} \nRaison: ${raison}`,
+        )
+        .catch(() => {});
+      // Log the ban action in the mod-log channel if it exists
+      const guildConfig = await GuildConfiguration.findOne({
+        guildId: interaction.guild.id,
+      });
+      const logChannel = interaction.guild.channels.cache.get(
+        guildConfig?.modLogChannel,
+      );
+      if (logChannel) {
+      logChannel.send({
+        embeds: [
+          new EmbedBuilder()
+            .setColor("#00ff99")
+            .setTitle("📋 Log ban")
+            .setDescription(`${member} a été banni par ${interaction.user}`)
+            .addFields(
+              { name: "Raison", value: raison },
+            )
+            .setTimestamp(),
+        ],
+      });
+      }
     } catch (error) {
       console.log(`Il y a une erreur lors du bannissement: ${error}`);
     }

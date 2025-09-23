@@ -1,141 +1,137 @@
 const {
-  ApplicationCommandOptionType,
   PermissionFlagsBits,
   Client,
   EmbedBuilder,
   SlashCommandBuilder,
 } = require("discord.js");
 const Warn = require("../../models/Warn");
-const cooldowns = new Set();
-const nbWarn = 0;
+const GuildConfiguration = require("../../models/GuildConfiguration");
+const { addWarn } = require("../../utils/warnUtils");
+
 module.exports = {
-  /**
-   *
-   * @param {Client} client
-   * @param {Interaction} interaction
-   *
-   *
-   */
   data: new SlashCommandBuilder()
     .setName("warn")
     .setDescription("Pour warn un membre du serveur")
     .addMentionableOption((option) =>
       option
         .setName("membre")
-        .setDescription("avertir un membre")
+        .setDescription("Membre à avertir")
         .setRequired(true),
     )
     .addStringOption((option) =>
       option
         .setName("raison")
-        .setDescription("La raison de l avertissement du membre")
+        .setDescription("La raison de l’avertissement du membre")
         .setRequired(false),
     )
     .setDefaultMemberPermissions(PermissionFlagsBits.KickMembers),
-  async execute(interaction) {
+
+  /**
+   * @param {Client} client
+   * @param {import("discord.js").CommandInteraction} interaction
+   */
+  async execute(interaction, client) {
     const membreId = interaction.options.get("membre").value;
     const raison =
-      interaction.options.get("raison")?.value || "Pas de raison donné";
+      interaction.options.get("raison")?.value || "Pas de raison donnée";
 
-    await interaction.deferReply();
+    await interaction.deferReply({ ephemeral: true });
 
-    const member = await interaction.guild.members.fetch(membreId);
-
-    if (!member) {
-      await interaction.editReply(
-        "Le membre mentionné n'est pas sur le serveur",
+    const member = await interaction.guild.members
+      .fetch(membreId)
+      .catch(() => null);
+    if (!member)
+      return interaction.editReply(
+        "Le membre mentionné n'est pas sur le serveur.",
       );
-      return;
-    }
 
-    if (member.id === interaction.guild.ownerId) {
-      await interaction.editReply("Tu ne peux pas warn le créateur du serveur");
-      return;
-    }
-
-    const memberRolePosition = member.roles.highest.position;
-    const requestUserRolePosition = interaction.member.roles.highest.position;
-    const botRolePosition = interaction.guild.members.me.roles.highest.position;
-
-    if (memberRolePosition >= requestUserRolePosition) {
-      await interaction.editReply(
-        "Vous ne pouvez pas warn ce membre car il a un rôle superieur ou égale  à vous",
+    // Protections
+    if (member.id === interaction.guild.ownerId)
+      return interaction.editReply(
+        "❌ Tu ne peux pas warn le créateur du serveur.",
       );
-      return;
-    }
-    if (memberRolePosition >= botRolePosition) {
-      await interaction.editReply(
-        "je ne peux pas warn ce membre car il a un rôle superieur ou égale a vous",
+    if (
+      member.roles.highest.position >= interaction.member.roles.highest.position
+    )
+      return interaction.editReply(
+        "❌ Tu ne peux pas warn ce membre (rôle supérieur ou égal au tien).",
       );
-      return;
-    }
-    const query = {
-      userId: member.id,
-      guildId: interaction.guild.id,
-    };
+    if (
+      member.roles.highest.position >=
+      interaction.guild.members.me.roles.highest.position
+    )
+      return interaction.editReply(
+        "❌ Je ne peux pas warn ce membre (rôle trop haut).",
+      );
+
+    // Création ou mise à jour du warn
+    const warnCount = await addWarn(member, raison);
+    
+
+    await warnDoc.save();
+try {
+
+    await checkAndSanction(member, warnDoc.warn);
+} catch (error) {
+  console.error("Erreur lors de la vérification des sanctions automatiques :", error);
+}
+    // Vérification et application des sanctions automatiques
+
+    // Embed de confirmation
+    const embed = new EmbedBuilder()
+      .setColor("#0099ff")
+      .setTitle("⚠️ Warn")
+      .setDescription(`Le membre ${member} a été warn.`)
+      .addFields(
+        { name: "Raison", value: raison, inline: false },
+        { name: "Nombre de warns", value: `${warnCount}`, inline: true },
+      )
+      .setTimestamp();
+
+    await interaction.editReply({ embeds: [embed] });
+
+    // DM au membre
+    await member
+      .send({
+        embeds: [
+          new EmbedBuilder()
+            .setColor("#FF0000")
+            .setTitle(`⚠️ Vous avez été warn sur ${interaction.guild.name}`)
+            .addFields(
+              { name: "Raison", value: raison },
+              { name: "Total de warns", value: `${warnCount}` },
+            )
+            .setTimestamp(),
+        ],
+      })
+      .catch(() => {});
+
+    // Log dans le modLogChannel
     try {
-      const warn = await Warn.findOne(query);
-      if (warn) {
-        warn.raison.push(raison);
-        warn.warn += nbWarn + 1;
-        await warn.save().catch((e) => {
-          console.log(`erreur sauvegarde mise à jour level ${e}`);
-          return;
+      const guildConfig = await GuildConfiguration.findOne({
+        guildId: interaction.guild.id,
+      });
+      const logChannel = interaction.guild.channels.cache.get(
+        guildConfig?.modLogChannel,
+      );
+
+      if (logChannel) {
+        logChannel.send({
+          embeds: [
+            new EmbedBuilder()
+              .setColor("#FFA500")
+              .setTitle("📋 Log Warn")
+              .setDescription(`${member} a été warn par ${interaction.user}`)
+              .addFields(
+                { name: "Raison", value: raison },
+                { name: "Total de warns", value: `${warnCount}` },
+              )
+              .setTimestamp(),
+          ],
         });
-        cooldowns.add(member.id);
-        setTimeout(() => {
-          cooldowns.delete(member.id);
-        }, 60000);
-
-        const embed = new EmbedBuilder()
-          .setColor("#0099ff")
-          .setTitle("Warn")
-          .setDescription(`Le membre ${member} a été warn `)
-          .addFields(
-            {
-              name: "Raison",
-              value: `${raison}`,
-              inline: false,
-            },
-            {
-              name: "Nombre de warn",
-              value: `${warn.warn}`,
-            },
-          );
-
-        interaction.editReply({ embeds: [embed] });
-      } else {
-        const newWarn = new Warn({
-          userId: member.id,
-          guildId: interaction.guild.id,
-          warn: warn,
-          raison: [raison],
-        });
-        await newWarn.save();
-        cooldowns.add(member.id);
-        setTimeout(() => {
-          cooldowns.delete(member.id);
-        }, 60000);
-        const embed = new EmbedBuilder()
-          .setColor("#0099ff")
-          .setTitle("Warn")
-          .setDescription(`Le membre ${member} a été warn `)
-          .addFields(
-            {
-              name: "Raison",
-              value: `${raison}`,
-              inline: false,
-            },
-            {
-              name: "Nombre de warn",
-              value: `${warn.warn}`,
-            },
-          );
-
-        interaction.editReply({ embeds: [embed] });
       }
     } catch (error) {
-      console.log(`Erreur dans le warn : ${error}`);
+      console.error("Erreur lors du log du warn:", error);
     }
   },
 };

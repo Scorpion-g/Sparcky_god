@@ -15,7 +15,7 @@ module.exports = {
     const channel = interaction.options.getChannel('channel');
     await GuildConfiguration.findOneAndUpdate(
       { guildId: interaction.guild.id },
-      { welcomeChannel: channel.id },
+      { leaveChannel: channel.id },
       { upsert: true }
     );
     await interaction.reply(`Le canal d\'aurevoir est maintenant : ${channel}`);

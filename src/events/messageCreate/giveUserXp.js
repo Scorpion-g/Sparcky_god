@@ -1,73 +1,80 @@
-const { Client, Message } = require('discord.js');
-const Level = require('../../models/Level');
-const calculateLevelXp = require('../../utils/calculateLevelXp');
+const { Client, Message, EmbedBuilder } = require("discord.js");
+const Level = require("../../models/Level");
+
+// Cooldowns pour éviter le spam XP
 const cooldowns = new Set();
-function getRandomXp(min, max) {
-	min = Math.ceil(min);
-	max = Math.floor(max);
-	return Math.floor(Math.random() * (max - min + 1)) + min;
+
+/**
+ * Ajoute un cooldown pour un utilisateur
+ * @param {string} userId
+ * @param {number} duration
+ */
+function addCooldown(userId, duration = 60000) {
+  cooldowns.add(userId);
+  setTimeout(() => cooldowns.delete(userId), duration);
 }
 
 /**
- *
- * @param {Client} client
+ * Donne un nombre aléatoire d'XP
+ * @param {number} min
+ * @param {number} max
+ */
+function getRandomXp(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+/**
+ * Event messageCreate pour donner de l'XP
  * @param {Message} message
  */
+module.exports = {
+  name: "messageCreate",
+  async execute(client,message) {
+    if (!message.guild) return;
+    if (message.author.bot) return;
+    if (cooldowns.has(message.author.id)) return;
 
-module.exports= { 
-  name: "giveUserXp",
-  async execute(client, message)  {
-	if (
-		!message.inGuild() ||
-		message.author.bot ||
-		cooldowns.has(message.author.id)
-	)
-		return;
+    const xpToGive = getRandomXp(15, 30);
+    const query = { userId: message.author.id, guildId: message.guild.id };
 
-	const xpToGive = getRandomXp(5, 15);
+    try {
 
-	const query = {
-		userId: message.author.id,
-		guildId: message.guild.id,
-	};
+      let levelDoc = await Level.findOne(query);
 
-	try {
-		const level = await Level.findOne(query);
+      if (levelDoc) {
+        levelDoc.xp += xpToGive;
 
-		if (level) {
-			level.xp += xpToGive;
+        // Level up si nécessaire
+        let leveledUp = false;
+        while (levelDoc.xp >= require("../../utils/calculateLevelXp")(levelDoc.level)) {
+          levelDoc.xp -= require("../../utils/calculateLevelXp")(levelDoc.level);
+          levelDoc.level++;
+          leveledUp = true;
 
-			if (level.xp > calculateLevelXp(level.level)) {
-				level.xp = 0;
-				level.level += 1;
+          const embed = new EmbedBuilder()
+            .setColor("#00FF00")
+            .setTitle("✨ Level Up !")
+            .setDescription(`${message.member} a atteint le **niveau ${levelDoc.level}** !`)
+            .setTimestamp();
 
-				message.channel.send(
-					`${message.member} tu as level up au **level ${level.level}**.`
-				);
-			}
+          message.channel.send({ embeds: [embed] });
+        }
 
-			await level.save().catch(e => {
-				console.log(`erreur sauvegarde mise à jour level ${e}`);
-				return;
-			});
-			cooldowns.add(message.author.id);
-			setTimeout(() => {
-				cooldowns.delete(message.author.id);
-			}, 60000);
-		} else {
-			const newLevel = new Level({
-				userId: message.author.id,
-				guildId: message.guild.id,
-				xp: xpToGive,
-			});
+        await levelDoc.save();
+      } else {
+        levelDoc = new Level({
+          userId: message.author.id,
+          guildId: message.guild.id,
+          xp: xpToGive,
+          level: 0,
+        });
+        await levelDoc.save();
+      }
 
-			await newLevel.save();
-			cooldowns.add(message.author.id);
-			setTimeout(() => {
-				cooldowns.delete(message.author.id);
-			}, 60000);
-		}
-	} catch (error) {
-		console.log(`Erreur dans le don d'xp : ${error}`);
-	}
-}};
+      addCooldown(message.author.id);
+    } catch (err) {
+      console.error(`[XP] Erreur lors de l'attribution de XP : ${err}`);
+    }
+  },
+};
+

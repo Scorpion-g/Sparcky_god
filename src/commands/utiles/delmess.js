@@ -1,4 +1,4 @@
-const { SlashCommandBuilder } = require("discord.js");
+const { SlashCommandBuilder,PermissionFlagsBits,EmbedBuilder } = require("discord.js");
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -11,14 +11,24 @@ module.exports = {
         .setRequired(true)
         .setMinValue(1)
         .setMaxValue(100),
-    ),
+    ).setDefaultMemberPermissions(PermissionFlagsBits.ManageMessages),
   async execute(interaction) {
     const amount = interaction.options.getInteger("amount");
 
     try {
+      const embed = new EmbedBuilder()
+        .setColor("#0099ff")
+        .setTitle("Suppression de messages")
+        .setDescription(`Suppression de ${amount} message(s)...`)
+        .setTimestamp();
+
+      await interaction.reply({ embeds: [embed], ephemeral: true });
+
+      // Supprimer les messages
       const deletedMessages = await interaction.channel.bulkDelete(amount, true);
-      await interaction.reply({
-        content: `✅ | J'ai supprimé ${deletedMessages.size} message(s).`,
+      await interaction.editReply({
+        content: `✅ | ${deletedMessages.size} message(s) supprimé(s).`,
+        embeds: [],
         ephemeral: true,
       });
     } catch (error) {

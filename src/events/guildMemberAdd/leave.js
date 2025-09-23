@@ -6,9 +6,9 @@ module.exports = {
   async execute(client, member) {
     try {
       const guildConfig = await GuildConfiguration.findOne({ guildId: member.guild.id });
-      if (!guildConfig || !guildConfig.welcomeChannel) return;
+      if (!guildConfig || !guildConfig.leaveChannel) return;
 
-      const channel = member.guild.channels.cache.get(guildConfig.welcomeChannel);
+      const channel = member.guild.channels.cache.get(guildConfig.leaveChannel);
       if (!channel) return;
 
       const embed = new EmbedBuilder()

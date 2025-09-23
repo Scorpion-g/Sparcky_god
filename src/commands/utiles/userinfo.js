@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
-
+const warn = require("../../models/Warn");
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("userinfo")
@@ -33,7 +33,10 @@ module.exports = {
           second: "numeric",
         })
       : "Date de join non disponible";
-
+    const warns = await warn.find({
+      userId: user.id,
+      guildId: interaction.guild.id,
+    });
     const roles =
       member.roles.cache
         .filter((role) => role.id !== interaction.guild.id)
@@ -58,6 +61,10 @@ module.exports = {
           name: "**Surnom :**",
           value: member.nickname ? member.nickname : "Aucun surnom",
           inline: true,
+        },
+        {
+          name: "**Nombre de warns :**",
+          value: `${warns.length}`,
         },
         {
           name: "**Serveur :**",

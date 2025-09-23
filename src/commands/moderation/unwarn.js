@@ -1,134 +1,119 @@
 const {
-  ApplicationCommandOptionType,
   PermissionFlagsBits,
   Client,
   EmbedBuilder,
   SlashCommandBuilder,
 } = require("discord.js");
 const Warn = require("../../models/Warn");
-const cooldowns = new Set();
-const nbWarn = 0;
+const GuildConfiguration = require("../../models/GuildConfiguration");
+
 module.exports = {
-  /**
-   *
-   * @param {Client} client
-   * @param {Interaction} interaction
-   *
-   *
-   */
   data: new SlashCommandBuilder()
     .setName("unwarn")
-    .setDescription("Pourenlver un warn à un membre du serveur")
+    .setDescription("Enlever un ou plusieurs warns à un membre du serveur")
     .addMentionableOption((option) =>
-      option
-        .setName("membre")
-        .setDescription("avertir un membre")
+      option.setName("membre")
+        .setDescription("Membre à unwarn")
         .setRequired(true),
     )
     .addIntegerOption((option) =>
-      option
-        .setName("nombre")
-        .setDescription("nombre de warn à enlever")
+      option.setName("nombre")
+        .setDescription("Nombre de warns à retirer")
         .setRequired(true),
     )
     .addStringOption((option) =>
-      option
-        .setName("raison")
-        .setDescription("La raison de l avertissement du membre")
+      option.setName("raison")
+        .setDescription("Raison de l’unwarn")
         .setRequired(false),
     )
     .setDefaultMemberPermissions(PermissionFlagsBits.KickMembers),
+
+  /**
+   * 
+   * @param {Client} client 
+   * @param {import("discord.js").CommandInteraction} interaction 
+   */
   async execute(interaction) {
     const membreId = interaction.options.get("membre").value;
-    const raison =
-      interaction.options.get("raison")?.value || "Pas de raison donné";
+    const nbUnwarn = interaction.options.get("nombre").value;
+    const raison = interaction.options.get("raison")?.value || "Pas de raison donnée";
 
     await interaction.deferReply();
 
-    const member = await interaction.guild.members.fetch(membreId);
-    const nbUnwarn = interaction.options.get("nombre").value;
-    if (!member) {
-      await interaction.editReply(
-        "Le membre mentionné n'est pas sur le serveur",
-      );
-      return;
+    const member = await interaction.guild.members.fetch(membreId).catch(() => null);
+    if (!member) return interaction.editReply("❌ Le membre mentionné n'est pas sur le serveur.");
+
+    // Récupération des warns
+    const warn = await Warn.findOne({ userId: member.id, guildId: interaction.guild.id });
+    if (!warn) {
+      return interaction.editReply(`❌ ${member} n’a jamais été warn.`);
     }
 
-    if (member.id === interaction.guild.ownerId) {
-      await interaction.editReply("Tu ne peux pas warn le créateur du serveur");
-      return;
+    if (warn.warn <= 0) {
+      return interaction.editReply(`❌ ${member} n’a déjà plus de warns.`);
     }
 
-    const memberRolePosition = member.roles.highest.position;
-    const requestUserRolePosition = interaction.member.roles.highest.position;
-    const botRolePosition = interaction.guild.members.me.roles.highest.position;
+    let oldWarns = warn.warn;
 
-    if (memberRolePosition >= requestUserRolePosition) {
-      await interaction.editReply(
-        "Vous ne pouvez pas warn ce membre car il a un rôle superieur ou égale  à vous",
-      );
-      return;
+    if (nbUnwarn >= warn.warn) {
+      warn.warn = 0;
+    } else {
+      warn.warn -= nbUnwarn;
     }
-    if (memberRolePosition >= botRolePosition) {
-      await interaction.editReply(
-        "je ne peux pas warn ce membre car il a un rôle superieur ou égale a vous",
-      );
-      return;
-    }
-    const query = {
-      userId: member.id,
-      guildId: interaction.guild.id,
-    };
-    try {
-      const warn = await Warn.findOne(query);
-      if (warn) {
-        warn.raison.push(raison);
-        if (warn.warn <= 0 || warn.warn == null) {
-          await interaction.editReply(
-            `${member} n'as plus de warn à son actif!`,
-          );
-        } else if (warn.warn < nbUnwarn) {
-          await interaction.editReply(
-            `Comme ${nbUnwarn}>${warn.warn} les warns de ${member} ont été mis à 0!`,
-          );
-          warn.warn = 0;
-        } else {
-          warn.warn += nbWarn - nbUnwarn;
-          warn.unwarn += nbUnwarn;
-          warn.raison.push("unwarn: " + raison);
-          const embed = new EmbedBuilder()
-            .setColor("#0099ff")
-            .setTitle("Unwarn")
-            .setDescription(`Le membre ${member} a été unwarn `)
+
+    warn.raison.push(`Unwarn: ${raison}`);
+    await warn.save();
+
+    // Embed de confirmation
+    const embed = new EmbedBuilder()
+      .setColor("#00ff99")
+      .setTitle("✅ Unwarn")
+      .setDescription(`${member} a été unwarn.`)
+      .addFields(
+        { name: "Raison", value: raison, inline: false },
+        { name: "Warns retirés", value: `${nbUnwarn}`, inline: true },
+        { name: "Warns restants", value: `${warn.warn}`, inline: true },
+      )
+      .setTimestamp();
+
+    await interaction.editReply({ embeds: [embed] });
+
+    // DM au membre
+    await member.send({
+      embeds: [
+        new EmbedBuilder()
+          .setColor("#00ff99")
+          .setTitle(`✅ Vous avez été unwarn sur ${interaction.guild.name}`)
+          .addFields(
+            { name: "Raison", value: raison },
+            { name: "Warns retirés", value: `${nbUnwarn}` },
+            { name: "Warns restants", value: `${warn.warn}` },
+          )
+          .setTimestamp(),
+      ],
+    }).catch(() => {});
+
+    // Log modération
+    const guildConfig = await GuildConfiguration.findOne({ guildId: interaction.guild.id });
+    const logChannel = interaction.guild.channels.cache.get(guildConfig?.modLogChannel);
+
+    if (logChannel) {
+      logChannel.send({
+        embeds: [
+          new EmbedBuilder()
+            .setColor("#00ff99")
+            .setTitle("📋 Log Unwarn")
+            .setDescription(`${member} a été unwarn par ${interaction.user}`)
             .addFields(
-              {
-                name: "Raison",
-                value: `${raison}`,
-                inline: false,
-              },
-              {
-                name: `Nombre d'unwarn`,
-                value: `${nbUnwarn}`,
-              },
-            );
-
-          interaction.editReply({ embeds: [embed] });
-        }
-        await warn.save().catch((e) => {
-          console.log(`erreur sauvegarde mise à jour level ${e}`);
-          return;
-        });
-        cooldowns.add(member.id);
-        setTimeout(() => {
-          cooldowns.delete(member.id);
-        }, 60000);
-      } else {
-        await interaction.editReply(
-          `Le membre ${member} n'as jamais été warn vous ne pouvez donc pas l'unwarn.`,
-        );
-      }
-    } catch (error) {
-      console.log(`Erreur dans le warn : ${error}`);
+              { name: "Raison", value: raison },
+              { name: "Warns retirés", value: `${nbUnwarn}` },
+              { name: "Warns avant", value: `${oldWarns}`, inline: true },
+              { name: "Warns restants", value: `${warn.warn}`, inline: true },
+            )
+            .setTimestamp(),
+        ],
+      });
     }
   },
 };
+

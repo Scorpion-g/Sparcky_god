@@ -3,9 +3,11 @@ const {
   Interaction,
   ApplicationCommandOptionType,
   PermissionFlagsBits,
+  EmbedBuilder,
   SlashCommandBuilder,
 } = require("discord.js");
 const ms = require("ms");
+const GuildConfiguration = require("../../models/GuildConfiguration");
 
 module.exports = {
   /**
@@ -102,6 +104,35 @@ module.exports = {
       await interaction.editReply(
         `${membre} a été timeout pour une durée de ${prettyMs(msdurée, { verbose: true })}.\nRaison: ${raison}`,
       );
+      await membre
+        .send(
+          `Tu as été timeout sur le serveur ${interaction.guild.name} par ${interaction.user.tag} pour une durée de ${prettyMs(msdurée, { verbose: true })}\nRaison: ${raison}`,
+        )
+        .catch(() => { });
+      const guildConfig = await GuildConfiguration.findOne({
+        guildId: interaction.guild.id,
+      });
+      const logChannel = interaction.guild.channels.cache.get(
+        guildConfig?.modLogChannel,
+      );
+      if (logChannel) {
+        logChannel.send({
+          embeds: [
+            new EmbedBuilder()
+              .setColor("#00ff99")
+              .setTitle("📋 Log timeout")
+              .setDescription(`${membre} a été timeout par ${interaction.user}`)
+              .addFields(
+                { name: "Raison", value: raison },
+                {
+                  name: "Durée",
+                  value: `${prettyMs(msdurée, { verbose: true })}`,
+                },
+              )
+              .setTimestamp(),
+          ],
+        });
+      }
     } catch (error) {
       console.log(`Il y a eu une erreur dans le timeout d'un membre ${error}`);
     }

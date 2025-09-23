@@ -5,15 +5,15 @@ module.exports = {
     .setName("ping")
     .setDescription("Retourne votre ping"),
 
-  async execute(interaction,client) {
-    await interaction.deferReply();
-
-    const reply = await interaction.fetchReply();
-
-    const ping = reply.createdTimestamp - interaction.createdTimestamp;
-
-    await interaction.reply(
-      `Pong! Client ${ping}ms | Websocket: ${client.ws.ping}ms`,
+  async execute(interaction, client) {
+    const sent = await interaction.reply({
+      content: "Calcul du ping...",
+      fetchReply: true,
+    });
+    const latency = sent.createdTimestamp - interaction.createdTimestamp;
+    const apiLatency = Math.round(client.ws.ping);
+    interaction.editReply(
+      `🏓 Pong! Latence: ${latency}ms. Latence API: ${apiLatency}ms.`,
     );
   },
 };

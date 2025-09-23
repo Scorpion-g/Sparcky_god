@@ -1,26 +1,34 @@
-const path = require('path');
-const getAllFiles = require('./getAllFiles');
+const fs = require("fs");
+const path = require("path");
 
-module.exports = (exception = []) => {
-	let localCommands = [];
+/**
+ * Charge toutes les commandes locales
+ * et leur ajoute automatiquement une catégorie
+ * basée sur le nom du dossier parent.
+ */
+module.exports = (dirsPath = path.join(__dirname, "..", "commands")) => {
+  const commands = [];
 
-	const commandCategories = getAllFiles(
-		path.join(__dirname, '..', 'commands'),
-		true
-	);
-	for (const commandCategory of commandCategories) {
-		const commandFiles = getAllFiles(commandCategory);
+  // Parcours des sous-dossiers (ex: moderation, utiles, economy)
+  const categories = fs.readdirSync(dirsPath);
 
-		for (const commandFile of commandFiles) {
-			const commandObject = require(commandFile);
+  for (const category of categories) {
+    const commandsPath = path.join(dirsPath, category);
+    const commandFiles = fs
+      .readdirSync(commandsPath)
+      .filter((file) => file.endsWith(".js"));
 
-			if (exception.includes(commandObject.name)) {
-				continue;
-			}
+    for (const file of commandFiles) {
+      const filePath = path.join(commandsPath, file);
+      const command = require(filePath);
 
-			localCommands.push(commandObject);
-		}
-	}
+      // Ajout automatique de la catégorie si elle n’est pas définie
+      command.category = command.category || category.charAt(0).toUpperCase() + category.slice(1);
 
-	return localCommands;
+      commands.push(command);
+    }
+  }
+
+  return commands;
 };
+
