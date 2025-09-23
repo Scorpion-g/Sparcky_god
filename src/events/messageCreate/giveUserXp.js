@@ -1,4 +1,4 @@
-const { Client, Message, EmbedBuilder } = require("discord.js");
+const { Message, EmbedBuilder } = require("discord.js");
 const Level = require("../../models/Level");
 
 // Cooldowns pour éviter le spam XP
@@ -29,7 +29,7 @@ function getRandomXp(min, max) {
  */
 module.exports = {
   name: "messageCreate",
-  async execute(client,message) {
+  async execute(client, message) {
     if (!message.guild) return;
     if (message.author.bot) return;
     if (cooldowns.has(message.author.id)) return;
@@ -38,7 +38,6 @@ module.exports = {
     const query = { userId: message.author.id, guildId: message.guild.id };
 
     try {
-
       let levelDoc = await Level.findOne(query);
 
       if (levelDoc) {
@@ -46,15 +45,21 @@ module.exports = {
 
         // Level up si nécessaire
         let leveledUp = false;
-        while (levelDoc.xp >= require("../../utils/calculateLevelXp")(levelDoc.level)) {
-          levelDoc.xp -= require("../../utils/calculateLevelXp")(levelDoc.level);
+        while (
+          levelDoc.xp >= require("../../utils/calculateLevelXp")(levelDoc.level)
+        ) {
+          levelDoc.xp -= require("../../utils/calculateLevelXp")(
+            levelDoc.level,
+          );
           levelDoc.level++;
           leveledUp = true;
 
           const embed = new EmbedBuilder()
             .setColor("#00FF00")
             .setTitle("✨ Level Up !")
-            .setDescription(`${message.member} a atteint le **niveau ${levelDoc.level}** !`)
+            .setDescription(
+              `${message.member} a atteint le **niveau ${levelDoc.level}** !`,
+            )
             .setTimestamp();
 
           message.channel.send({ embeds: [embed] });
@@ -77,4 +82,3 @@ module.exports = {
     }
   },
 };
-

@@ -1,6 +1,6 @@
 module.exports = {
   name: "interactionCreate",
-  async execute(client,interaction) {
+  async execute(client, interaction) {
     if (!interaction.isButton()) return;
 
     if (interaction.customId.startsWith("role_react_")) {

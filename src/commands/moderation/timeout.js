@@ -1,7 +1,4 @@
 const {
-  Client,
-  Interaction,
-  ApplicationCommandOptionType,
   PermissionFlagsBits,
   EmbedBuilder,
   SlashCommandBuilder,
@@ -108,7 +105,7 @@ module.exports = {
         .send(
           `Tu as été timeout sur le serveur ${interaction.guild.name} par ${interaction.user.tag} pour une durée de ${prettyMs(msdurée, { verbose: true })}\nRaison: ${raison}`,
         )
-        .catch(() => { });
+        .catch(() => {});
       const guildConfig = await GuildConfiguration.findOne({
         guildId: interaction.guild.id,
       });

@@ -1,6 +1,5 @@
 const { EmbedBuilder, PermissionFlagsBits } = require("discord.js");
 const GuildConfiguration = require("../../models/GuildConfiguration");
-const Warn = require("../../models/Warn");
 const { addWarn } = require("../../utils/warnUtils");
 module.exports = {
   name: "messageCreate",
@@ -31,7 +30,7 @@ module.exports = {
     try {
       // Supprimer le message
       if (message.deletable) {
-        await message.delete().catch(() => { });
+        await message.delete().catch(() => {});
       }
 
       const warningMessage = await message.channel.send({
@@ -47,7 +46,7 @@ module.exports = {
       });
 
       // Supprimer le warning après 5s
-      setTimeout(() => warningMessage.delete().catch(() => { }), 5000);
+      setTimeout(() => warningMessage.delete().catch(() => {}), 5000);
 
       // Timeout l'utilisateur (10s)
       if (
@@ -70,7 +69,7 @@ module.exports = {
               ],
             });
 
-            setTimeout(() => timeoutMessage.delete().catch(() => { }), 5000);
+            setTimeout(() => timeoutMessage.delete().catch(() => {}), 5000);
           })
           .catch(() =>
             console.warn(
@@ -95,9 +94,7 @@ module.exports = {
             ],
           })
           .catch(() =>
-            console.warn(
-              `Impossible d'envoyer un DM à ${message.author.tag}`,
-            ),
+            console.warn(`Impossible d'envoyer un DM à ${message.author.tag}`),
           );
         //Log le warn dans le channel de log si configuré
         const logChannel = message.guild.channels.cache.get(
@@ -117,12 +114,11 @@ module.exports = {
               { name: "Canal", value: `${message.channel}`, inline: true },
             )
             .setTimestamp();
-          logChannel.send({ embeds: [logEmbed] }).catch(() => { });
-
+          logChannel.send({ embeds: [logEmbed] }).catch(() => {});
         }
       }
-      } catch (error) {
-        console.error("Erreur lors de la gestion de l'antilink :", error);
-      }
-    },
-  };
+    } catch (error) {
+      console.error("Erreur lors de la gestion de l'antilink :", error);
+    }
+  },
+};

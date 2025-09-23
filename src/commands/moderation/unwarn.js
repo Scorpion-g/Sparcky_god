@@ -1,6 +1,5 @@
 const {
   PermissionFlagsBits,
-  Client,
   EmbedBuilder,
   SlashCommandBuilder,
 } = require("discord.js");
@@ -12,39 +11,51 @@ module.exports = {
     .setName("unwarn")
     .setDescription("Enlever un ou plusieurs warns à un membre du serveur")
     .addMentionableOption((option) =>
-      option.setName("membre")
+      option
+        .setName("membre")
         .setDescription("Membre à unwarn")
         .setRequired(true),
     )
     .addIntegerOption((option) =>
-      option.setName("nombre")
+      option
+        .setName("nombre")
         .setDescription("Nombre de warns à retirer")
         .setRequired(true),
     )
     .addStringOption((option) =>
-      option.setName("raison")
+      option
+        .setName("raison")
         .setDescription("Raison de l’unwarn")
         .setRequired(false),
     )
     .setDefaultMemberPermissions(PermissionFlagsBits.KickMembers),
 
   /**
-   * 
-   * @param {Client} client 
-   * @param {import("discord.js").CommandInteraction} interaction 
+   *
+   * @param {Client} client
+   * @param {import("discord.js").CommandInteraction} interaction
    */
   async execute(interaction) {
     const membreId = interaction.options.get("membre").value;
     const nbUnwarn = interaction.options.get("nombre").value;
-    const raison = interaction.options.get("raison")?.value || "Pas de raison donnée";
+    const raison =
+      interaction.options.get("raison")?.value || "Pas de raison donnée";
 
     await interaction.deferReply();
 
-    const member = await interaction.guild.members.fetch(membreId).catch(() => null);
-    if (!member) return interaction.editReply("❌ Le membre mentionné n'est pas sur le serveur.");
+    const member = await interaction.guild.members
+      .fetch(membreId)
+      .catch(() => null);
+    if (!member)
+      return interaction.editReply(
+        "❌ Le membre mentionné n'est pas sur le serveur.",
+      );
 
     // Récupération des warns
-    const warn = await Warn.findOne({ userId: member.id, guildId: interaction.guild.id });
+    const warn = await Warn.findOne({
+      userId: member.id,
+      guildId: interaction.guild.id,
+    });
     if (!warn) {
       return interaction.editReply(`❌ ${member} n’a jamais été warn.`);
     }
@@ -79,23 +90,29 @@ module.exports = {
     await interaction.editReply({ embeds: [embed] });
 
     // DM au membre
-    await member.send({
-      embeds: [
-        new EmbedBuilder()
-          .setColor("#00ff99")
-          .setTitle(`✅ Vous avez été unwarn sur ${interaction.guild.name}`)
-          .addFields(
-            { name: "Raison", value: raison },
-            { name: "Warns retirés", value: `${nbUnwarn}` },
-            { name: "Warns restants", value: `${warn.warn}` },
-          )
-          .setTimestamp(),
-      ],
-    }).catch(() => {});
+    await member
+      .send({
+        embeds: [
+          new EmbedBuilder()
+            .setColor("#00ff99")
+            .setTitle(`✅ Vous avez été unwarn sur ${interaction.guild.name}`)
+            .addFields(
+              { name: "Raison", value: raison },
+              { name: "Warns retirés", value: `${nbUnwarn}` },
+              { name: "Warns restants", value: `${warn.warn}` },
+            )
+            .setTimestamp(),
+        ],
+      })
+      .catch(() => {});
 
     // Log modération
-    const guildConfig = await GuildConfiguration.findOne({ guildId: interaction.guild.id });
-    const logChannel = interaction.guild.channels.cache.get(guildConfig?.modLogChannel);
+    const guildConfig = await GuildConfiguration.findOne({
+      guildId: interaction.guild.id,
+    });
+    const logChannel = interaction.guild.channels.cache.get(
+      guildConfig?.modLogChannel,
+    );
 
     if (logChannel) {
       logChannel.send({
@@ -116,4 +133,3 @@ module.exports = {
     }
   },
 };
-

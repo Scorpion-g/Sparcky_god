@@ -1,7 +1,5 @@
 const {
-  ApplicationCommandOptionType,
   PermissionFlagsBits,
-  Client,
   SlashCommandBuilder,
   EmbedBuilder,
 } = require("discord.js");
@@ -85,19 +83,17 @@ module.exports = {
         guildConfig?.modLogChannel,
       );
       if (logChannel) {
-       logChannel.send({
-        embeds: [
-          new EmbedBuilder()
-            .setColor("#00ff99")
-            .setTitle("📋 Log kick")
-            .setDescription(`${member} a été kick par ${interaction.user}`)
-            .addFields(
-              { name: "Raison", value: raison },
-            )
-            .setTimestamp(),
-        ],
-      });
-     }
+        logChannel.send({
+          embeds: [
+            new EmbedBuilder()
+              .setColor("#00ff99")
+              .setTitle("📋 Log kick")
+              .setDescription(`${member} a été kick par ${interaction.user}`)
+              .addFields({ name: "Raison", value: raison })
+              .setTimestamp(),
+          ],
+        });
+      }
     } catch (error) {
       console.log(`Il y a une erreur lors du kick: ${error}`);
     }

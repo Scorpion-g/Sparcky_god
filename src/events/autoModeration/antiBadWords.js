@@ -1,7 +1,6 @@
 const { EmbedBuilder, PermissionFlagsBits } = require("discord.js");
 const GuildConfiguration = require("../../models/GuildConfiguration");
 const { containsBadWord } = require("../../utils/badWordUtils"); // ton util
-const Warn = require("../../models/Warn");
 const { addWarn } = require("../../utils/warnUtils");
 module.exports = {
   name: "messageCreate",

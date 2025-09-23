@@ -51,7 +51,9 @@ module.exports = {
         PermissionFlagsBits.ManageRoles,
       )
     ) {
-      return interaction.editReply("❌ Je n'ai pas la permission de gérer les rôles.");
+      return interaction.editReply(
+        "❌ Je n'ai pas la permission de gérer les rôles.",
+      );
     }
     if (role.position >= interaction.guild.members.me.roles.highest.position) {
       return interaction.editReply(
@@ -64,7 +66,9 @@ module.exports = {
     try {
       targetMessage = await interaction.channel.messages.fetch(messageId);
     } catch (error) {
-      return interaction.editReply("❌ Impossible de récupérer le message. Vérifie l'ID.");
+      return interaction.editReply(
+        "❌ Impossible de récupérer le message. Vérifie l'ID.",
+      );
     }
 
     // Vérifier emoji
@@ -72,7 +76,9 @@ module.exports = {
     if (/^\d+$/.test(buttonEmoji)) {
       emoji = interaction.guild.emojis.cache.get(buttonEmoji);
       if (!emoji) {
-        return interaction.editReply("❌ Emoji personnalisé introuvable dans ce serveur.");
+        return interaction.editReply(
+          "❌ Emoji personnalisé introuvable dans ce serveur.",
+        );
       }
     }
 
@@ -87,11 +93,19 @@ module.exports = {
     let row;
     if (targetMessage.components.length > 0) {
       row = ActionRowBuilder.from(targetMessage.components[0]);
-      if (row.components.some((comp) => comp.data.custom_id === button.data.custom_id)) {
-        return interaction.editReply("❌ Un bouton pour ce rôle existe déjà sur ce message.");
+      if (
+        row.components.some(
+          (comp) => comp.data.custom_id === button.data.custom_id,
+        )
+      ) {
+        return interaction.editReply(
+          "❌ Un bouton pour ce rôle existe déjà sur ce message.",
+        );
       }
       if (row.components.length >= 5) {
-        return interaction.editReply("❌ Impossible d'ajouter plus de 5 boutons par ligne.");
+        return interaction.editReply(
+          "❌ Impossible d'ajouter plus de 5 boutons par ligne.",
+        );
       }
       row.addComponents(button);
     } else {
@@ -101,7 +115,9 @@ module.exports = {
     try {
       await targetMessage.edit({ components: [row] });
     } catch (error) {
-      return interaction.editReply("❌ Impossible d'ajouter le bouton au message.");
+      return interaction.editReply(
+        "❌ Impossible d'ajouter le bouton au message.",
+      );
     }
 
     // Confirmation
@@ -116,4 +132,3 @@ module.exports = {
     return interaction.editReply({ embeds: [successEmbed] });
   },
 };
-

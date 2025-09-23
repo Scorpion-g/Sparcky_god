@@ -1,5 +1,4 @@
 const { EmbedBuilder, PermissionsBitField } = require("discord.js");
-const warn = require("../../models/Warn");
 const { addWarn } = require("../../utils/warnUtils");
 module.exports = {
   name: "messageCreate",
@@ -78,15 +77,13 @@ module.exports = {
               }
             }
             //ajouter un warn à l'utilisateur
-            const warnCount = await addWarn(message.author,"spam de message");            // DM à l'utilisateur
+            const warnCount = await addWarn(message.author, "spam de message"); // DM à l'utilisateur
             await message.author
               .send({
                 embeds: [
                   new EmbedBuilder()
                     .setColor("#FF0000")
-                    .setTitle(
-                      `⚠️ Vous avez été warn sur ${message.guild.name}`,
-                    )
+                    .setTitle(`⚠️ Vous avez été warn sur ${message.guild.name}`)
                     .addFields(
                       {
                         name: "Raison",
