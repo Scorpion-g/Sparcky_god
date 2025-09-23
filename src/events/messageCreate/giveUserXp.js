@@ -1,4 +1,4 @@
-const { Message, EmbedBuilder } = require("discord.js");
+const { EmbedBuilder } = require("discord.js");
 const Level = require("../../models/Level");
 
 // Cooldowns pour éviter le spam XP
@@ -44,7 +44,6 @@ module.exports = {
         levelDoc.xp += xpToGive;
 
         // Level up si nécessaire
-        let leveledUp = false;
         while (
           levelDoc.xp >= require("../../utils/calculateLevelXp")(levelDoc.level)
         ) {

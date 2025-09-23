@@ -12,7 +12,7 @@ module.exports = {
 
     if (!guildConfig || !guildConfig.antilink) return;
 
-    const contentToCheck = message.content.replace(/[<>\(\)]/g, ""); // éviter les contournements
+    const contentToCheck = message.content.replace(/[<>()]/g, ""); // éviter les contournements
 
     const linkPatterns = [
       /https?:\/\/[^\s]+/gi,
@@ -100,6 +100,11 @@ module.exports = {
         const logChannel = message.guild.channels.cache.get(
           guildConfig?.modLogChannel,
         );
+        const messageContent = message.content.length
+          ? message.content.length > 1024
+            ? message.content.substring(0, 1021) + "..."
+            : message.content
+          : "Contenu non disponible";
         if (logChannel && logChannel.isTextBased()) {
           const logEmbed = new EmbedBuilder()
             .setColor("#FF0000")

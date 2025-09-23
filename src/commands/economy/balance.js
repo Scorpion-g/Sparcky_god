@@ -1,6 +1,5 @@
 const {
   SlashCommandBuilder,
-  Interaction,
 } = require("discord.js");
 const User = require("../../models/User");
 module.exports = {

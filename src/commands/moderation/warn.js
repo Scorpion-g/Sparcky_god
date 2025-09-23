@@ -1,6 +1,5 @@
 const {
   PermissionFlagsBits,
-  Client,
   EmbedBuilder,
   SlashCommandBuilder,
 } = require("discord.js");
@@ -29,7 +28,7 @@ module.exports = {
    * @param {Client} client
    * @param {import("discord.js").CommandInteraction} interaction
    */
-  async execute(interaction, client) {
+  async execute(interaction) {
     const membreId = interaction.options.get("membre").value;
     const raison =
       interaction.options.get("raison")?.value || "Pas de raison donnée";
@@ -65,15 +64,25 @@ module.exports = {
 
     // Création ou mise à jour du warn
     const warnCount = await addWarn(member, raison);
-    
-
+    const Warn = require("../../models/Warn");
+    const checkAndSanction = require("../../utils/checkAndSanction");
+    const warnDoc = new Warn({
+      userId: member.id,
+      guildId: interaction.guild.id,
+      moderatorId: interaction.user.id,
+      reason: raison,
+      date: new Date(),
+      warn: warnCount,
+    });
     await warnDoc.save();
-try {
-
-    await checkAndSanction(member, warnDoc.warn);
-} catch (error) {
-  console.error("Erreur lors de la vérification des sanctions automatiques :", error);
-}
+    try {
+      await checkAndSanction(member, warnDoc.warn);
+    } catch (error) {
+      console.error(
+        "Erreur lors de la vérification des sanctions automatiques :",
+        error,
+      );
+    }
     // Vérification et application des sanctions automatiques
 
     // Embed de confirmation

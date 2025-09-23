@@ -66,9 +66,10 @@ module.exports = {
     try {
       targetMessage = await interaction.channel.messages.fetch(messageId);
     } catch (error) {
-      return interaction.editReply(
-        "❌ Impossible de récupérer le message. Vérifie l'ID.",
+       interaction.editReply(
+        `❌ Impossible de récupérer le message. Vérifie l'ID.` ,
       );
+      console.error("Erreur lors de la récupération du message :", error);
     }
 
     // Vérifier emoji
@@ -115,9 +116,10 @@ module.exports = {
     try {
       await targetMessage.edit({ components: [row] });
     } catch (error) {
-      return interaction.editReply(
-        "❌ Impossible d'ajouter le bouton au message.",
+       interaction.editReply(
+        `❌ Impossible d'ajouter le bouton au message.`,
       );
+      console.error("Erreur lors de l'édition du message :", error);
     }
 
     // Confirmation

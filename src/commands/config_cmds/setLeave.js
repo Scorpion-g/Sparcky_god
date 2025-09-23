@@ -19,6 +19,6 @@ module.exports = {
       { leaveChannel: channel.id },
       { upsert: true },
     );
-    await interaction.reply(`Le canal d\'aurevoir est maintenant : ${channel}`);
+    await interaction.reply(`Le canal d'aurevoir est maintenant : ${channel}`);
   },
 };

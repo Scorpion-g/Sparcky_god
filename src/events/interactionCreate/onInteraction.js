@@ -31,9 +31,10 @@ module.exports = {
       } catch (error) {
         await interaction.reply({
           content:
-            "❌ Impossible de modifier tes rôles. Vérifie mes permissions.",
+            `❌ Impossible de modifier tes rôles. Vérifie mes permissions.`,
           ephemeral: true,
         });
+        console.error("Erreur lors de l'ajout/retrait de rôle :", error);
       }
     }
   },

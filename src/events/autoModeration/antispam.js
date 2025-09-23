@@ -77,7 +77,7 @@ module.exports = {
               }
             }
             //ajouter un warn à l'utilisateur
-            const warnCount = await addWarn(message.author, "spam de message"); // DM à l'utilisateur
+            const userWarn = await addWarn(message.author, "spam de message"); // DM à l'utilisateur
             await message.author
               .send({
                 embeds: [
