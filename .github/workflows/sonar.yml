@@ -16,18 +16,23 @@ jobs:
         ports:
           - 9000:9000
         options: >-
-          --health-cmd="curl --fail http://localhost:9000/api/system/health || exit 1" --health-interval=10s --health-timeout=5s --health-retries=10
+          --health-cmd="curl --fail http://localhost:9000/api/system/health || exit 1"
+          --health-interval=30s
+          --health-timeout=10s
+          --health-retries=12
+        env:
+          SONAR_ES_BOOTSTRAP_CHECKS_DISABLE: "true"
 
     steps:
       - uses: actions/checkout@v3
 
-      # Wait for SonarQube to become healthy
+      # Wait for SonarQube to become healthy (up to 6 minutes)
       - name: Wait for SonarQube
         run: |
-          for i in {1..30}; do
+          for i in {1..36}; do
             curl --fail http://localhost:9000/api/system/health && break
             echo "Waiting for SonarQube..."
-            sleep 5
+            sleep 10
           done
 
       - name: SonarQube Scan
