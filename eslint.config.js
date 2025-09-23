@@ -1,4 +1,3 @@
-// eslint.config.js
 const js = require('@eslint/js');
 
 module.exports = [
@@ -17,7 +16,11 @@ module.exports = [
         module: "readonly",
         Buffer: "readonly",
         global: "readonly",
-        // Add more Node.js globals as needed
+        console: "readonly",      // <-- ADD THIS
+        setTimeout: "readonly",   // <-- ADD THIS
+        clearTimeout: "readonly", // <-- OPTIONAL
+        setInterval: "readonly",  // <-- OPTIONAL
+        clearInterval: "readonly",// <-- OPTIONAL
       },
     },
     ignores: ['node_modules/**'],
