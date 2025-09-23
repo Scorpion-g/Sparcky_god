@@ -6,5 +6,10 @@ module.exports = [
   {
     ignores: ['node_modules/**'],
     // Add your custom rules here
-  }
+  },
+  env: {
+    node: true,
+    es2021: true,
+  },
+  // 
 ];
