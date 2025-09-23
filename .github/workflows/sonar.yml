@@ -37,9 +37,9 @@ jobs:
           done
       - name: Install sonar-scanner
         run: |
-          wget -O sonar-scanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
-          unzip sonar-scanner.zip
-          export PATH="$PWD/sonar-scanner-5.0.1.3006-linux/bin:$PATH"
+           wget -O sonar-scanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
+           unzip sonar-scanner.zip
+           echo "$PWD/sonar-scanner-5.0.1.3006-linux/bin" >> $GITHUB_PATH
       - name: SonarQube Scan
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
@@ -47,5 +47,5 @@ jobs:
           sonar-scanner \
           -Dsonar.host.url=http://localhost:9000 \
           -Dsonar.login=$SONAR_TOKEN \
-          -Dsonar.projectKey=your_project_key \
-          -Dsonar.projectName=your_project_name
+          -Dsonar.projectKey=Sparcky_god \
+          -Dsonar.projectName=Sparcky_god
