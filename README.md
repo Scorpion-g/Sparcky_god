@@ -11,11 +11,8 @@
 ## Table des matières
 - [Fonctionnalités](#fonctionnalités)
 - [Installation](#installation)
-- [Configuration](#configuration)
-- [Commandes](#commandes)
 - [Exemples](#exemples)
-- [Contribuer](#contribuer)
-- [Licence](#licence)
+- [Licence](/LICENSE)
 
 ---
 
@@ -28,5 +25,14 @@
 - ⚙️ **Configuration** : réglages complets via commandes slash  
 
 ---
-
+## Installation
+- [serveur d'aide](https://discord.gg/vCzscdvhqb)
+- [ajouter le bot](https://discord.com/oauth2/authorize?client_id=1275197373580050604)
+---
+## Exemples
+$ `/daily`
+✅ Vous avez reçu 500$
+<br>
+$ `/money @Utilisateur`
+💰 Utilisateur possède 1500$
 
