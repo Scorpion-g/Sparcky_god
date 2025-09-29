@@ -23,9 +23,6 @@ module.exports = {
 
     // Fetch the current anti-raid setting from the database
     const guildConfiguration = await GuildConfiguration.findOne({ guildId });
-    if (!guildConfiguration) {
-      guildConfiguration = { antiRaid: false }; // Default settings if none exist
-    }
     const currentConfiguration = guildConfiguration.antiRaid;
 
     if (action === "enable") {
