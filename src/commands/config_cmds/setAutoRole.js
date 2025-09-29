@@ -3,27 +3,27 @@ const GuildConfiguration = require("../../models/GuildConfiguration");
 
 module.exports = {
   data: new SlashCommandBuilder()
-    .setName("setleave")
-    .setDescription("Définir le canal d'aurevoir")
-    .addChannelOption((option) =>
+    .setName("setautorole")
+    .setDescription("Définir le rôle automatique pour les nouveaux membres")
+    .addRoleOption((option) =>
       option
-        .setName("channel")
-        .setDescription("Canal pour les messages d'aurevoir")
+        .setName("role")
+        .setDescription("Rôle à attribuer automatiquement aux nouveaux membres")
         .setRequired(true),
     ).setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild),
 
   async execute(interaction) {
-    const channel = interaction.options.getChannel("channel");
+    const role = interaction.options.getRole("role");
     await GuildConfiguration.findOneAndUpdate(
       { guildId: interaction.guild.id },
-      { leaveChannel: channel.id },
+      { autoRole: role.id },
       { upsert: true },
     );
     const embed = new EmbedBuilder()
       .setColor("#0099ff")
-      .setTitle("Canal d'aurevoir défini")
-      .setDescription(`Le canal d'aurevoir a été défini sur ${channel}.`)
+      .setTitle("Rôle automatique défini")
+      .setDescription(`Le rôle automatique a été défini sur ${role}.`)
       .setTimestamp();
     await interaction.reply({ embeds: [embed], ephemeral: true });
   },
-};
+};  

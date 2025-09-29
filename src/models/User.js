@@ -17,6 +17,10 @@ const userSchema = new Schema({
 		type: Date,
 		reqired: true,
 	},
+  items: {
+    type: [String],
+    default: []
+  }
 });
 
 module.exports = model('User', userSchema);

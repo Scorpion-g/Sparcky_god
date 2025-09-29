@@ -1,4 +1,8 @@
-const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
+const {
+  SlashCommandBuilder,
+  EmbedBuilder,
+  PermissionFlagsBits,
+} = require("discord.js");
 const GuildConfiguration = require("../../models/GuildConfiguration");
 
 module.exports = {
@@ -14,7 +18,8 @@ module.exports = {
           { name: "activer", value: "on" },
           { name: "désactiver", value: "off" },
         ),
-    ),
+    )
+    .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild),
   async execute(interaction) {
     const etat = interaction.options.getString("etat");
 
@@ -54,4 +59,4 @@ module.exports = {
       });
     }
   },
-};  
+};

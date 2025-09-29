@@ -1,0 +1,10 @@
+{
+  "ERRORS": {
+    "NO_PERMISSION": "❌ You do not have permission!",
+    "MEMBER_NOT_FOUND": "The member does not exist."
+  },
+  "SUCCESS": {
+    "WARN_SENT": "⚠️ Member {{member}} has been warned for: {{reason}}"
+  }
+}
+

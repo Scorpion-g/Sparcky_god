@@ -1,4 +1,4 @@
-const { SlashCommandBuilder } = require('discord.js');
+const { SlashCommandBuilder,EmbedBuilder,PermissionFlagsBits } = require('discord.js');
 const GuildConfiguration = require('../../models/GuildConfiguration');
 
 module.exports = {
@@ -9,7 +9,7 @@ module.exports = {
       option.setName('channel')
         .setDescription('Canal pour les messages de bienvenue')
         .setRequired(true)
-    ),
+    ).setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild),
 
   async execute(interaction) {
     const channel = interaction.options.getChannel('channel');
@@ -18,7 +18,12 @@ module.exports = {
       { welcomeChannel: channel.id },
       { upsert: true }
     );
-    await interaction.reply(`Le canal de bienvenue est maintenant : ${channel}`);
+    const embed = new EmbedBuilder()
+      .setColor('#0099ff')
+      .setTitle('Canal de bienvenue défini')
+      .setDescription(`Le canal de bienvenue a été défini sur ${channel}.`)
+      .setTimestamp();
+    await interaction.reply({ embeds: [embed], ephemeral: true });
   },
 };
 

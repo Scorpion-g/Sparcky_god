@@ -2,16 +2,12 @@ module.exports = (existingCommand, localCommand) => {
 	const areChoicesDifferent = (existingChoices, localChoices) => {
 		for (const localChoice of localChoices) {
 			const existingChoice = existingChoices?.find(
-				choice => choice.name === localChoice.name
+				(choice) => choice.name === localChoice.name
 			);
 
-			if (!existingChoice) {
-				return true;
-			}
+			if (!existingChoice) return true;
 
-			if (localChoice.value !== existingChoice.value) {
-				return true;
-			}
+			if (localChoice.value !== existingChoice.value) return true;
 		}
 		return false;
 	};
@@ -19,12 +15,10 @@ module.exports = (existingCommand, localCommand) => {
 	const areOptionsDifferent = (existingOptions, localOptions) => {
 		for (const localOption of localOptions) {
 			const existingOption = existingOptions?.find(
-				option => option.name === localOption.name
+				(option) => option.name === localOption.name
 			);
 
-			if (!existingOption) {
-				return true;
-			}
+			if (!existingOption) return true;
 
 			if (
 				localOption.description !== existingOption.description ||
@@ -43,6 +37,7 @@ module.exports = (existingCommand, localCommand) => {
 		return false;
 	};
 
+	// --- Comparaison description / options (déjà en place) ---
 	if (
 		existingCommand.description !== localCommand.description ||
 		existingCommand.options?.length !==
@@ -52,5 +47,25 @@ module.exports = (existingCommand, localCommand) => {
 		return true;
 	}
 
+	// --- Comparaison des permissions par défaut ---
+	const existingPerms =
+		existingCommand.defaultMemberPermissions?.bitfield?.toString() ??
+		existingCommand.defaultMemberPermissions ??
+		null;
+	const localPerms = localCommand.default_member_permissions ?? null;
+
+	if (existingPerms !== localPerms) {
+		return true;
+	}
+
+	// --- Comparaison de l'autorisation en DM ---
+	if (
+		(existingCommand.dmPermission ?? true) !==
+		(localCommand.dm_permission ?? true)
+	) {
+		return true;
+	}
+
 	return false;
 };
+

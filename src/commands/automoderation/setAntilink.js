@@ -1,4 +1,8 @@
-const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
+const {
+  SlashCommandBuilder,
+  EmbedBuilder,
+  PermissionFlagsBits,
+} = require("discord.js");
 const GuildConfiguration = require("../../models/GuildConfiguration");
 
 module.exports = {
@@ -10,11 +14,9 @@ module.exports = {
         .setName("etat")
         .setDescription("Choisir l'état de l'antilink (on/off)")
         .setRequired(true)
-        .addChoices(
-          { name: "on", value: "on" },
-          { name: "off", value: "off" }
-        )
-    ),
+        .addChoices({ name: "on", value: "on" }, { name: "off", value: "off" }),
+    )
+    .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild),
   async execute(interaction) {
     const etat = interaction.options.getString("etat");
     // Ici, vous pouvez ajouter la logique pour activer ou désactiver l'antilink
@@ -40,7 +42,7 @@ module.exports = {
       const embed = new EmbedBuilder()
         .setTitle("Configuration de l'Antilink")
         .setDescription(
-          `L'antilink a été **${etat === "on" ? "activé" : "désactivé"}**.`
+          `L'antilink a été **${etat === "on" ? "activé" : "désactivé"}**.`,
         )
         .setColor(etat === "on" ? "#00FF00" : "#FF0000");
 
@@ -51,7 +53,7 @@ module.exports = {
         content:
           "Une erreur est survenue lors de la configuration de l'antilink.",
         ephemeral: true,
-      })
-    };
+      });
+    }
   },
 };
