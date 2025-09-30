@@ -78,7 +78,7 @@ module.exports = {
     try {
       await checkAndSanction(member, warnDoc.warn);
     } catch (error) {
-      console.error(
+      logger.error(
         "Erreur lors de la vérification des sanctions automatiques :",
         error,
       );
@@ -139,7 +139,7 @@ module.exports = {
         });
       }
     } catch (error) {
-      console.error("Erreur lors du log du warn:", error);
+      logger.error("Erreur lors du log du warn:", error);
     }
   },
 };

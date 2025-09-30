@@ -19,7 +19,7 @@ module.exports = {
 
       channel.send({ embeds: [embed] });
     } catch (error) {
-      console.error('Erreur event guildMemberAdd:', error);
+      logger.error('Erreur event guildMemberAdd:', error);
     }
   },
 };

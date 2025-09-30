@@ -48,7 +48,7 @@ module.exports = {
 
       await interaction.reply({ embeds: [embed], ephemeral: true });
     } catch (error) {
-      console.error(`Erreur lors de la configuration de l'antilink: ${error}`);
+      logger.error(`Erreur lors de la configuration de l'antilink: ${error}`);
       await interaction.editReply({
         content:
           "Une erreur est survenue lors de la configuration de l'antilink.",

@@ -106,7 +106,7 @@ module.exports = {
           logChannel.send({ embeds: [logEmbed] }).catch(() => {});
         }
       } catch (error) {
-        console.error("Erreur lors de la gestion des mots interdits :", error);
+        logger.error("Erreur lors de la gestion des mots interdits :", error);
       }
     }
   },

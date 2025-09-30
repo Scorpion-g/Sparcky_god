@@ -114,7 +114,7 @@ module.exports = {
           }
         }
       } catch (error) {
-        console.error("Erreur lors de la suppression du message:", error);
+        logger.error("Erreur lors de la suppression du message:", error);
       }
     }
   },

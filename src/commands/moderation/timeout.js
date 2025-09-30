@@ -131,7 +131,7 @@ module.exports = {
         });
       }
     } catch (error) {
-      console.log(`Il y a eu une erreur dans le timeout d'un membre ${error}`);
+      logger.error(`Il y a eu une erreur dans le timeout d'un membre ${error}`);
     }
   },
 };

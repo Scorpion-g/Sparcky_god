@@ -123,7 +123,7 @@ module.exports = {
         }
       }
     } catch (error) {
-      console.error("Erreur lors de la gestion de l'antilink :", error);
+      logger.error("Erreur lors de la gestion de l'antilink :", error);
     }
   },
 };

@@ -33,12 +33,12 @@ module.exports = {
           "Le serveur est actuellement en système antiraid merci de votre compréhension.",
         );
       } catch (err) {
-        console.error("Impossible d'envoyer un MP au membre:", err);
+        logger.error("Impossible d'envoyer un MP au membre:", err);
       }
       // Kick le membre si nécessaire
       await member.kick("Anti-raid system activated");
     } catch (error) {
-      console.error("Erreur event guildMemberAdd:", error);
+      logger.error("Erreur event guildMemberAdd:", error);
     }
   },
 };

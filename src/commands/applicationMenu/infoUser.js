@@ -114,12 +114,12 @@ module.exports = {
           }
         }
       } catch (error) {
-        console.error("Erreur lors de la récupération de la présence :", error);
+        logger.error("Erreur lors de la récupération de la présence :", error);
       }
 
       await interaction.reply({ embeds: [embed], ephemeral: true });
     } catch (error) {
-      console.error(
+      logger.error(
         "Erreur lors de l'exécution de la commande infouser :",
         error,
       );

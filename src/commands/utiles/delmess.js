@@ -32,7 +32,7 @@ module.exports = {
         ephemeral: true,
       });
     } catch (error) {
-      console.error(`Erreur lors de la suppression des messages: ${error}`);
+      logger.error(`Erreur lors de la suppression des messages: ${error}`);
       await interaction.reply({
         content: "❌ | Une erreur est survenue lors de la suppression des messages.",
         ephemeral: true,

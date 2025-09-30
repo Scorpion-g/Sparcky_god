@@ -35,7 +35,7 @@ module.exports = {
 
       interaction.reply({ embeds: [embed] });
     } catch (error) {
-      console.log(`Il y a une erreur dans embed: ${error}`);
+      logger.error(`Il y a une erreur dans embed: ${error}`);
     }
   },
 };

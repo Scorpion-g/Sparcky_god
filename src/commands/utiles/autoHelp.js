@@ -68,7 +68,7 @@ module.exports = {
 
       await interaction.reply({ embeds: [helpEmbed], ephemeral: true });
     } catch (error) {
-      console.error(`Erreur lors de l'exécution de la commande help: ${error}`);
+      logger.error(`Erreur lors de l'exécution de la commande help: ${error}`);
       await interaction.reply({
         content: "❌ | Une erreur est survenue lors de l'exécution de la commande help.",
         ephemeral: true,

@@ -1,3 +1,4 @@
+const logger = require("../../utils/logger"); // Assure-toi d'avoir ton logger Winston ici
 module.exports = {
   name: "interactionCreate",
   async execute(client, interaction) {
@@ -34,7 +35,7 @@ module.exports = {
             `❌ Impossible de modifier tes rôles. Vérifie mes permissions.`,
           ephemeral: true,
         });
-        console.error("Erreur lors de l'ajout/retrait de rôle :", error);
+        logger.error("Erreur lors de l'ajout/retrait de rôle :", error);
       }
     }
   },

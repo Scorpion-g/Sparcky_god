@@ -53,7 +53,7 @@ module.exports = {
         `**${dailyAmount} $** ont été ajouté à votre compte. Votre compte s'élève donc à **${user.balance} $**`,
       );
     } catch (error) {
-      console.log(`Il y a une erreur avec /daily : ${error}`);
+      logger.error(`Il y a une erreur avec /daily : ${error}`);
     }
   },
 };

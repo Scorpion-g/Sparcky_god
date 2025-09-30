@@ -81,7 +81,7 @@ module.exports = {
 
       await interaction.editReply({ embeds: [embed], ephemeral: true });
     } catch (error) {
-      console.error(`Erreur lors du paiement: ${error}`);
+      logger.error(`Erreur lors du paiement: ${error}`);
       await interaction.editReply({
         content:
           "Une erreur est survenue lors du traitement de votre paiement.",

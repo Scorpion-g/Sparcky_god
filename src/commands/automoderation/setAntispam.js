@@ -51,7 +51,7 @@ module.exports = {
 
       await interaction.editReply({ embeds: [embed], ephemeral: true });
     } catch (error) {
-      console.error(`Erreur lors de la configuration de l'antispam: ${error}`);
+      logger.error(`Erreur lors de la configuration de l'antispam: ${error}`);
       await interaction.editReply({
         content:
           "Une erreur est survenue lors de la configuration de l'antispam.",

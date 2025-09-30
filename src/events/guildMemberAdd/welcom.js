@@ -21,11 +21,11 @@ module.exports = {
       if(guildConfig.autoRole) {
         const role = member.guild.roles.cache.get(guildConfig.autoRole);
         if(role) {
-          await member.roles.add(role).catch(err => console.error('Erreur lors de l\'attribution du rôle automatique:', err));
+          await member.roles.add(role).catch(err => logger.error('Erreur lors de l\'attribution du rôle automatique:', err));
         }
       } 
     } catch (error) {
-      console.error('Erreur event guildMemberAdd:', error);
+      logger.error('Erreur event guildMemberAdd:', error);
     }
   },
 };

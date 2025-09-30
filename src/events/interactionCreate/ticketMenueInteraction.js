@@ -1,5 +1,5 @@
 const { EmbedBuilder } = require("discord.js");
-
+const logger = require("../../utils/logger"); // Assure-toi d'avoir ton logger Winston ici
 module.exports = {
   name: "interactionCreate",
   once: false,

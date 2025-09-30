@@ -19,40 +19,46 @@ module.exports = {
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild),
 
   /**
-   * 
-   * @param {import("discord.js").Client} client 
-   * @param {import("discord.js").CommandInteraction} interaction 
+   *
+   * @param {import("discord.js").Client} client
+   * @param {import("discord.js").CommandInteraction} interaction
    */
   async execute(interaction) {
     const état = interaction.options.get("état").value;
 
     await interaction.deferReply();
 
-    let guildConfig = await GuildConfiguration.findOne({ guildId: interaction.guild.id });
+    let guildConfig = await GuildConfiguration.findOne({
+      guildId: interaction.guild.id,
+    });
+    try {
+      if (!guildConfig) {
+        guildConfig = new GuildConfiguration({
+          guildId: interaction.guild.id,
+          antiBadWords: état,
+        });
+      } else {
+        guildConfig.antiBadWords = état;
+      }
 
-    if (!guildConfig) {
-      guildConfig = new GuildConfiguration({
-        guildId: interaction.guild.id,
-        antiBadWords: état,
-      });
-    } else {
-      guildConfig.antiBadWords = état;
+      await guildConfig.save();
+
+      const embed = new EmbedBuilder()
+        .setColor(état ? "#00ff99" : "#ff3300")
+        .setTitle(
+          état ? "✅ Anti Bad Words Activé" : "❌ Anti Bad Words Désactivé",
+        )
+        .setDescription(
+          `L'anti bad words a été ${état ? "activé" : "désactivé"} avec succès.`,
+        )
+        .setTimestamp();
+
+      await interaction.editReply({ embeds: [embed] });
+    } catch (error) {
+      logger.error(error);
+      await interaction.editReply(
+        "Une erreur est survenue lors de la mise à jour de la configuration.",
+      );
     }
-
-    await guildConfig.save();
-
-    const embed = new EmbedBuilder()
-      .setColor(état ? "#00ff99" : "#ff3300")
-      .setTitle(état ? "✅ Anti Bad Words Activé" : "❌ Anti Bad Words Désactivé")
-      .setDescription(`L'anti bad words a été ${état ? "activé" : "désactivé"} avec succès.`)
-      .setTimestamp();
-
-    await interaction.editReply({ embeds: [embed] });
   },
 };
-//     } catch (error) {
-//       console.error(error);
-//       await interaction.editReply("❌ Une erreur est survenue lors du débannissement du membre.");
-//     }
-//   },
-// }; 

@@ -1,5 +1,6 @@
 const { EmbedBuilder } = require("discord.js");
 const Level = require("../../models/Level");
+const logger = require("../../utils/logger");
 
 // Cooldowns pour éviter le spam XP
 const cooldowns = new Set();
@@ -76,7 +77,7 @@ module.exports = {
 
       addCooldown(message.author.id);
     } catch (err) {
-      console.error(`[XP] Erreur lors de l'attribution de XP : ${err}`);
+      logger.error(`[XP] Erreur lors de l'attribution de XP : ${err}`);
     }
   },
 };

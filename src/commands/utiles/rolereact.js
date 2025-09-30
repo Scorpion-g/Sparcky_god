@@ -69,7 +69,7 @@ module.exports = {
        interaction.editReply(
         `❌ Impossible de récupérer le message. Vérifie l'ID.` ,
       );
-      console.error("Erreur lors de la récupération du message :", error);
+      logger.error("Erreur lors de la récupération du message :", error);
     }
 
     // Vérifier emoji
@@ -119,7 +119,7 @@ module.exports = {
        interaction.editReply(
         `❌ Impossible d'ajouter le bouton au message.`,
       );
-      console.error("Erreur lors de l'édition du message :", error);
+      logger.error("Erreur lors de l'édition du message :", error);
     }
 
     // Confirmation

@@ -95,7 +95,7 @@ module.exports = {
         });
       }
     } catch (error) {
-      console.log(`Il y a une erreur lors du kick: ${error}`);
+      logger.error(`Il y a une erreur lors du kick: ${error}`);
     }
   },
 };

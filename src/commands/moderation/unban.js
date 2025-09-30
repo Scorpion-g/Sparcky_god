@@ -110,7 +110,7 @@ module.exports = {
         });
       }
     } catch (error) {
-      console.error(`Erreur lors du débannissement:`, error);
+      logger.error(`Erreur lors du débannissement:`, error);
       await interaction.editReply(
         "❌ Une erreur est survenue lors du débannissement.",
       );
