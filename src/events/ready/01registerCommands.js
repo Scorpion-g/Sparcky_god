@@ -1,8 +1,8 @@
-const { testServer } = require("../../../config.json");
 const getLocalCommands = require("../../utils/getLocalCommands");
 const areCommandsDifferent = require("../../utils/areCommandsDifferent");
 const getApplicationCommands = require("../../utils/getApplicationCommands");
 const logger = require("../../utils/logger"); // Assure-toi d'avoir ton logger Winston ici
+const testServer = process.env.TEST_GUILD_ID; // ID du serveur de test pour les commandes guild
 
 module.exports = {
   name: "registerCommands",
