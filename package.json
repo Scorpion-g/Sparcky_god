@@ -9,7 +9,11 @@
     "lint": "eslint .",
     "test": "echo \"no test yet\""
   },
-  "keywords": ["discord", "bot", "discord.js"],
+  "keywords": [
+    "discord",
+    "bot",
+    "discord.js"
+  ],
   "author": "Scorpion-g",
   "license": "MIT",
   "repository": {
@@ -25,6 +29,7 @@
     "discord.js": "^14.22.1",
     "djs-commander": "^0.0.50",
     "dotenv": "^16.4.5",
+    "gulp": "^5.0.1",
     "i18next": "^25.5.2",
     "i18next-fs-backend": "^2.6.0",
     "mongodb": "^6.19.0",
@@ -35,11 +40,10 @@
     "winston": "^3.18.2"
   },
   "devDependencies": {
-    "nodemon": "^3.1.10",
-    "eslint": "^9.13.0"
+    "eslint": "^9.13.0",
+    "nodemon": "^3.1.10"
   },
   "engines": {
     "node": ">=18.0.0"
   }
 }
-
