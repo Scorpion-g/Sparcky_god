@@ -2,6 +2,7 @@ const {
   AttachmentBuilder,
   SlashCommandBuilder,
 } = require("discord.js");
+
 const calculateLevelXp = require("../../utils/calculateLevelXp");
 const Level = require("../../models/Level");
 const { RankCardBuilder, Font } = require("canvacord");

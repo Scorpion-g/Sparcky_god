@@ -2,7 +2,16 @@ require('dotenv').config();
 const { Client, IntentsBitField } = require('discord.js');
 const mongoose = require('mongoose');
 const eventHandler = require('./handlers/eventHandler');
+const logger = require('./utils/logger');
 
+// Gestion des erreurs globales
+process.on("unhandledRejection", (reason, promise) => {
+  logger.error("❌ Unhandled Rejection:", reason);
+});
+
+process.on("uncaughtException", (err) => {
+  logger.error("❌ Uncaught Exception:", err);
+});
 const client = new Client({
   intents: [
     IntentsBitField.Flags.Guilds,

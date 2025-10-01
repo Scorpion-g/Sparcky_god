@@ -1,5 +1,6 @@
 const { EmbedBuilder, PermissionFlagsBits } = require("discord.js");
 const GuildConfiguration = require("../../models/GuildConfiguration");
+const logger = require("../../utils/logger");
 
 module.exports = {
   name: "guildMemberAdd",

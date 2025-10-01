@@ -6,6 +6,7 @@ const {
   ButtonBuilder,
   ButtonStyle,
 } = require("discord.js");
+const logger = require("../../utils/logger");
 
 module.exports = {
   data: new SlashCommandBuilder()

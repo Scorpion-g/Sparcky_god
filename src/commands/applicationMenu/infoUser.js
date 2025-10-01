@@ -5,6 +5,7 @@ const {
 } = require("discord.js");
 const Level = require("../../models/Level");
 const Warn = require("../../models/Warn");
+const logger = require("../../utils/logger");
 module.exports = {
   data: new ContextMenuCommandBuilder()
     .setName("info")

@@ -3,6 +3,7 @@ const {
   EmbedBuilder,
   SlashCommandBuilder,
 } = require("discord.js");
+
 const Warn = require("../../models/Warn");
 const GuildConfiguration = require("../../models/GuildConfiguration");
 

@@ -1,5 +1,6 @@
 const { EmbedBuilder, PermissionsBitField } = require("discord.js");
 const { addWarn } = require("../../utils/warnUtils");
+const logger = require("../../utils/logger");
 module.exports = {
   name: "messageCreate",
   async execute(client, message) {

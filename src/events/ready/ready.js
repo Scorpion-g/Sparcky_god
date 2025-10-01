@@ -1,4 +1,5 @@
 const registerCommands = require('./01registerCommands.js');
+const logger = require('../../utils/logger');
 
 module.exports = {
   name: 'clientReady', // Discord.js v15
