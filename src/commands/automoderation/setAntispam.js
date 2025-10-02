@@ -34,10 +34,10 @@ module.exports = {
       if (!guildConfig) {
         guildConfig = new GuildConfiguration({
           guildId: interaction.guild.id,
-          antispam: etat === "on",
+          antispam: etat,
         });
       } else {
-        guildConfig.antispam = etat === "on";
+        guildConfig.antispam = etat;
       }
 
       await guildConfig.save();

@@ -109,7 +109,7 @@ module.exports = {
         if (logChannel && logChannel.isTextBased()) {
           const logEmbed = new EmbedBuilder()
             .setColor("#FF0000")
-            .setTitle("🛑 Mot Interdit Détecté")
+            .setTitle("🛑 Lien Détecté")
             .addFields(
               {
                 name: "Utilisateur",

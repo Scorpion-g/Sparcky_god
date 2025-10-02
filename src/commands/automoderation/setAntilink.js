@@ -32,10 +32,10 @@ module.exports = {
       if (!guildConfig) {
         guildConfig = new GuildConfiguration({
           guildId: interaction.guild.id,
-          antilink: etat === "on",
+          antilink: etat,
         });
       } else {
-        guildConfig.antilink = etat === "on";
+        guildConfig.antilink = etat;
       }
 
       await guildConfig.save();
