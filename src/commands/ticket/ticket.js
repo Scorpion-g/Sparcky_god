@@ -78,7 +78,7 @@ module.exports = {
       const logChannel = options.getChannel("log_channel");
       const ticketTypesInput = options.getString("ticket_types");
       const ticketDescription =
-        options.getString("ticket_description") ||
+        options.getString("ticket_description")?.replace(/\\n/g, '\n') ||
         "Sélectionnez le type de ticket dans le menu ci-dessous.";
 
       // Check si configuration déjà existante
