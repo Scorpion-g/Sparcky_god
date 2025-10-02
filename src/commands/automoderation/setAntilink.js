@@ -15,13 +15,15 @@ module.exports = {
         .setName("etat")
         .setDescription("Choisir l'état de l'antilink (on/off)")
         .setRequired(true)
-        .addChoices({ name: "on", value: "on" }, { name: "off", value: "off" }),
+        .addChoices(
+          { name: "on", value: "on" },
+          { name: "off", value: "off" }
+        ),
     )
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild),
+
   async execute(interaction) {
     const etat = interaction.options.getString("etat");
-    // Ici, vous pouvez ajouter la logique pour activer ou désactiver l'antilink
-    // Par exemple, en mettant à jour une base de données ou une configuration en mémoire
     await interaction.deferReply({ ephemeral: true });
 
     try {
@@ -32,29 +34,28 @@ module.exports = {
       if (!guildConfig) {
         guildConfig = new GuildConfiguration({
           guildId: interaction.guild.id,
-          antilink: etat,
         });
-      } else {
-        guildConfig.antilink = etat;
       }
 
+      guildConfig.antilink = etat==="on";
       await guildConfig.save();
 
       const embed = new EmbedBuilder()
-        .setTitle("Configuration de l'Antilink")
+        .setTitle("⚙️ Configuration de l'Antilink")
         .setDescription(
-          `L'antilink a été **${etat === "on" ? "activé" : "désactivé"}**.`,
+          `L'antilink a été **${etat === "on" ? "activé ✅" : "désactivé ❌"}**.`
         )
         .setColor(etat === "on" ? "#00FF00" : "#FF0000");
 
-      await interaction.reply({ embeds: [embed], ephemeral: true });
+      await interaction.editReply({ embeds: [embed] });
+
     } catch (error) {
       logger.error(`Erreur lors de la configuration de l'antilink: ${error}`);
       await interaction.editReply({
         content:
-          "Une erreur est survenue lors de la configuration de l'antilink.",
-        ephemeral: true,
+          "❌ Une erreur est survenue lors de la configuration de l'antilink.",
       });
     }
   },
 };
+
