@@ -5,11 +5,11 @@ module.exports = {
   name: "interactionCreate",
   once: false,
   async execute(client, interaction) {
+    const guild = interaction.guild;
     if (!interaction.isStringSelectMenu()) return;
-    if (interaction.customId !== "ticket_menu") return;
+    if (interaction.customId !== `ticket_menu`) return;
 
     const selectedType = interaction.values[0];
-    const guild = interaction.guild;
     const ticketSettings = await TicketSettings.findOne({ guildId: guild.id });
     if (!ticketSettings) {
       return interaction.reply({

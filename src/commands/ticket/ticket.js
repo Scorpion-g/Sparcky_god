@@ -122,7 +122,7 @@ module.exports = {
 
       const row = new ActionRowBuilder().addComponents(
         new StringSelectMenuBuilder()
-          .setCustomId(`ticket_menu_${guild.id}`) // unique par serveur
+          .setCustomId(`ticket_menu`) // unique par serveur
           .setPlaceholder("Sélectionnez le type de ticket")
           .addOptions(
             ticketTypes.map((type, index) => ({
@@ -221,11 +221,6 @@ module.exports = {
       // Supprimer le salon
       await channel.delete().catch(console.error);
 
-      return interaction.editReply({
-        content:
-          "✅ Ticket fermé et transcript sauvegardé dans le salon de logs.",
-        ephemeral: true,
-      });
     }
   },
 };
