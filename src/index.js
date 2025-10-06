@@ -19,6 +19,14 @@ const client = new Client({
     IntentsBitField.Flags.GuildMessages,
     IntentsBitField.Flags.GuildPresences,
     IntentsBitField.Flags.MessageContent,
+    IntentsBitField.Flags.GuildVoiceStates,
+    IntentsBitField.Flags.GuildMessageReactions,
+    IntentsBitField.Flags.GuildModeration,
+    IntentsBitField.Flags.GuildIntegrations,
+    IntentsBitField.Flags.GuildWebhooks,
+    IntentsBitField.Flags.DirectMessages,
+    IntentsBitField.Flags.DirectMessageReactions,
+    IntentsBitField.Flags.DirectMessageTyping,
   ],
 });
 

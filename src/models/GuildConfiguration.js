@@ -13,6 +13,7 @@ const guildConfigSchema = new mongoose.Schema({
   autoSanction: { type: Boolean, default: false },
   antiRaid: { type: Boolean, default: false },
   language: { type: String, default: "fr" },
+  vocChannelId: { type: String, default: null },
 });
 
 module.exports = mongoose.model("GuildConfiguration", guildConfigSchema);

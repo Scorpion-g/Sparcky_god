@@ -5,8 +5,6 @@ const {
   ActionRowBuilder,
   StringSelectMenuBuilder,
 } = require("discord.js");
-const fs = require("fs");
-const path = require("path");
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -122,7 +120,7 @@ module.exports = {
 
       const row = new ActionRowBuilder().addComponents(
         new StringSelectMenuBuilder()
-          .setCustomId(`ticket_menu`) // unique par serveur
+          .setCustomId(`ticket_menu_$()`) // unique par serveur
           .setPlaceholder("Sélectionnez le type de ticket")
           .addOptions(
             ticketTypes.map((type, index) => ({
