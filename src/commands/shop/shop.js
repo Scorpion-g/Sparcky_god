@@ -14,35 +14,42 @@ module.exports = {
     .addSubcommand((sub) =>
       sub
         .setName("info")
-        .setDescription("Afficher les informations du magasin")
+        .setDescription("Afficher les informations du magasin"),
     )
     .addSubcommand((sub) =>
       sub
         .setName("buy")
         .setDescription("Acheter un article du magasin")
-        .addStringOption((option) =>
-          option
-            .setName("item")
-            .setDescription("L'article à acheter")
-            .setRequired(true)
-            .setAutocomplete(true) // 🔹 Autocomplete activé
-        )
+        .addStringOption(
+          (option) =>
+            option
+              .setName("item")
+              .setDescription("L'article à acheter")
+              .setRequired(true)
+              .setAutocomplete(true), // 🔹 Autocomplete activé
+        ),
     )
     .addSubcommand((sub) =>
       sub
         .setName("add")
         .setDescription("Ajouter un article au magasin")
         .addStringOption((opt) =>
-          opt.setName("item").setDescription("Nom de l'article").setRequired(true)
+          opt
+            .setName("item")
+            .setDescription("Nom de l'article")
+            .setRequired(true),
         )
         .addIntegerOption((opt) =>
-          opt.setName("price").setDescription("Prix de l'article").setRequired(true)
+          opt
+            .setName("price")
+            .setDescription("Prix de l'article")
+            .setRequired(true),
         )
         .addStringOption((opt) =>
           opt
             .setName("description")
             .setDescription("Description de l'article")
-            .setRequired(true)
+            .setRequired(true),
         )
         .addStringOption((opt) =>
           opt
@@ -52,26 +59,29 @@ module.exports = {
             .addChoices(
               { name: "Rôle", value: "role" },
               { name: "Objet", value: "item" },
-              { name: "Autre", value: "other" }
-            )
+              { name: "Autre", value: "other" },
+            ),
         )
         .addIntegerOption((opt) =>
           opt
             .setName("stock")
             .setDescription("Stock (-1 pour illimité)")
-            .setRequired(false)
-        )
+            .setRequired(false),
+        ),
     )
     .addSubcommand((sub) =>
       sub
         .setName("remove")
         .setDescription("Supprimer un article du magasin")
-        .addStringOption((opt) =>
-          opt.setName("item").setDescription("Nom de l'article").setRequired(true)
-        )
-    )
-    .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild),
-
+        .addStringOption(
+          (opt) =>
+            opt
+              .setName("item")
+              .setDescription("Nom de l'article")
+              .setRequired(true)
+              .setAutocomplete(true), // 🔹 Autocomplete activé
+        ),
+    ),
   // --- Autocompletion ---
   async autocomplete(interaction) {
     const focused = interaction.options.getFocused();
@@ -147,7 +157,9 @@ module.exports = {
 
       // Si c'est un rôle, on l'ajoute
       if (shopItem.type === "role") {
-        const role = interaction.guild.roles.cache.find((r) => r.name === shopItem.name);
+        const role = interaction.guild.roles.cache.find(
+          (r) => r.name === shopItem.name,
+        );
         if (role) {
           const member = await interaction.guild.members.fetch(userId);
           await member.roles.add(role);
@@ -160,6 +172,13 @@ module.exports = {
     }
 
     if (subcommand === "add") {
+      if (
+        !interaction.member.permissions.has(PermissionFlagsBits.ManageGuild)
+      ) {
+        return interaction.editReply({
+          content: "❌ Vous n'avez pas la permission d'ajouter des articles.",
+        });
+      }
       const name = interaction.options.getString("item");
       const price = interaction.options.getInteger("price");
       const description = interaction.options.getString("description");
@@ -186,6 +205,14 @@ module.exports = {
     }
 
     if (subcommand === "remove") {
+      if (
+        !interaction.member.permissions.has(PermissionFlagsBits.ManageGuild)
+      ) {
+        return interaction.editReply({
+          content:
+            "❌ Vous n'avez pas la permission de supprimer des articles.",
+        });
+      }
       const itemName = interaction.options.getString("item");
       const shopItem = await ShopItem.findOne({ guildId, name: itemName });
 
@@ -200,4 +227,3 @@ module.exports = {
     }
   },
 };
-
