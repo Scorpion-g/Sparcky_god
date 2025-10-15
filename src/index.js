@@ -12,6 +12,7 @@ process.on("unhandledRejection", (reason, promise) => {
 process.on("uncaughtException", (err) => {
   logger.error("❌ Uncaught Exception:", err);
 });
+
 const client = new Client({
   intents: [
     IntentsBitField.Flags.Guilds,

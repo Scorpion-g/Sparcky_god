@@ -40,7 +40,7 @@ module.exports = {
           { name: "🆔 ID", value: user.id, inline: true },
           {
             name: "📅 Compte créé le",
-            value: `<t:${Math.floor(user.createdTimestamp / 1000)}: F>`,
+            value: `<t:${Math.floor(user.createdTimestamp / 1000)}:F>`,
             inline: true,
           },
           {
