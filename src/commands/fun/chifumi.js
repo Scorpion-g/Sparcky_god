@@ -121,9 +121,10 @@ module.exports = {
             userData.balance += betAmount; // Rembourse la mise
             await userData.save();
           }
-          new embed().setDescription(
+          const embed = new EmbedBuilder().setDescription(
             `Égalité! ${interaction.user.username} et ${opponent.user.username} récupèrent leur mise de ${betAmount} crédits chacun.`,
           );
+          await interaction.followUp({ embeds: [embed] });
         } else if (
           (userChoice == "pierre" && opponentChoice == "ciseaux") ||
           (userChoice == "feuille" && opponentChoice == "pierre") ||
