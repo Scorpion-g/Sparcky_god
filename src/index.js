@@ -1,5 +1,5 @@
 require('dotenv').config();
-const { Client, IntentsBitField } = require('discord.js');
+const { Client, IntentsBitField,Options } = require('discord.js');
 const mongoose = require('mongoose');
 const eventHandler = require('./handlers/eventHandler');
 const logger = require('./utils/logger');
@@ -28,7 +28,11 @@ const client = new Client({
     IntentsBitField.Flags.DirectMessages,
     IntentsBitField.Flags.DirectMessageReactions,
     IntentsBitField.Flags.DirectMessageTyping,
-  ],
+  ],makeCache: Options.cacheWithLimits({
+    MessageManager: 0,
+    GuildMemberManager: 50,
+    UserManager: 50,
+  }),
 });
 
 // Initialise la collection pour les commandes
