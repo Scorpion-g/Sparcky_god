@@ -4,6 +4,15 @@ const mongoose = require('mongoose');
 const eventHandler = require('./handlers/eventHandler');
 const logger = require('./utils/logger');
 
+const express= require("express");
+
+const app = express();
+const port = process.env.PORT || 3000;
+
+
+app.get("/", (req, res) => res.send("Bot running 🚀"));
+app.listen(port, () => console.log(`Healthcheck server running on port ${port}`));
+
 // Gestion des erreurs globales
 process.on("unhandledRejection", (reason, promise) => {
   logger.error("❌ Unhandled Rejection:", reason);
@@ -12,6 +21,7 @@ process.on("unhandledRejection", (reason, promise) => {
 process.on("uncaughtException", (err) => {
   logger.error("❌ Uncaught Exception:", err);
 });
+
 
 const client = new Client({
   intents: [
