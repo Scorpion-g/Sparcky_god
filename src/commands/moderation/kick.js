@@ -9,44 +9,52 @@ const GuildConfiguration = require("../../models/GuildConfiguration");
 module.exports = {
   /**
    *
-   * @param {Client} client
-   * @param {Interaction} interaction
+   * @param {import("discord.js").Client} client
+   * @param {import("discord.js").ChatInputCommandInteraction} interaction
    *
    */
   data: new SlashCommandBuilder()
     .setName("kick")
     .setDescription("Pour kick un membre du serveur")
+    .setDescriptionLocalizations({
+      "en-US": "Kick a server member",
+    })
     .addMentionableOption((option) =>
       option
         .setName("membre")
         .setDescription("Kick un membre")
+        .setDescriptionLocalizations({
+          "en-US": "Member to kick",
+        })
         .setRequired(true),
     )
     .addStringOption((option) =>
       option
         .setName("raison")
         .setDescription("La raison du kick du membre")
+        .setDescriptionLocalizations({
+          "en-US": "Reason for kicking the member",
+        })
         .setRequired(false),
     )
-    .setDefaultMemberPermissions(PermissionFlagsBits.KickMembers),
+    .setDefaultMemberPermissions(BigInt(PermissionFlagsBits.KickMembers)),
   async execute(interaction) {
     const membreId = interaction.options.get("membre").value;
     const raison =
-      interaction.options.get("raison")?.value || "Pas de raison donné";
+      interaction.options.get("raison")?.value ||
+      (await interaction.t("COMMON.DEFAULT_REASON"));
 
     await interaction.deferReply();
 
-    const member = await interaction.guild.members.fetch(membreId);
+    const member = await interaction.guild.members.fetch(membreId).catch(() => null);
 
     if (!member) {
-      await interaction.editReply(
-        "Le membre mentionné n'est pas sur le serveur",
-      );
+      await interaction.editReply(await interaction.t("ERRORS.MEMBER_NOT_IN_GUILD"));
       return;
     }
 
     if (member.id === interaction.guild.ownerId) {
-      await interaction.editReply("Tu ne peux pas kick le créateur du serveur");
+      await interaction.editReply(await interaction.t("ERRORS.CANNOT_SANCTION_OWNER"));
       return;
     }
 
@@ -56,27 +64,33 @@ module.exports = {
 
     if (memberRolePosition >= requestUserRolePosition) {
       await interaction.editReply(
-        "Vous ne pouvez pas kick ce membre car il a un rôle superieur ou égale  à vous",
+        await interaction.t("ERRORS.ROLE_TOO_HIGH_TARGET", { action: "kick" }),
       );
       return;
     }
     if (memberRolePosition >= botRolePosition) {
       await interaction.editReply(
-        "je ne peux pas kick ce membre car il a un rôle superieur ou égale a vous",
+        await interaction.t("ERRORS.ROLE_TOO_HIGH_BOT", { action: "kick" }),
       );
       return;
     }
     try {
       await member.kick({ raison });
       await interaction.editReply(
-        `Le membre ${member} a été kick \nRaison: ${raison}`,
+        await interaction.t("MODERATION.KICK.SUCCESS", {
+          member: `${member}`,
+          reason: raison,
+        }),
       );
       await member
         .send(
-          `Vous avez été kick du serveur ${interaction.guild.name} \nRaison: ${raison}`,
+          await interaction.t("MODERATION.KICK.DM", {
+            guild: interaction.guild.name,
+            reason: raison,
+          }),
         )
         .catch(() => {});
-      // Log the kick action if necessary in the moderation log channel
+
       const guildConfig = await GuildConfiguration.findOne({
         guildId: interaction.guild.id,
       });
@@ -88,15 +102,24 @@ module.exports = {
           embeds: [
             new EmbedBuilder()
               .setColor("#00ff99")
-              .setTitle("📋 Log kick")
-              .setDescription(`${member} a été kick par ${interaction.user}`)
-              .addFields({ name: "Raison", value: raison })
+              .setTitle(await interaction.t("MODERATION.KICK.LOG.TITLE"))
+              .setDescription(
+                await interaction.t("MODERATION.KICK.LOG.DESCRIPTION", {
+                  member: `${member}`,
+                  moderator: `${interaction.user}`,
+                }),
+              )
+              .addFields({
+                name: await interaction.t("COMMON.REASON"),
+                value: raison,
+              })
               .setTimestamp(),
           ],
         });
       }
     } catch (error) {
       logger.error(`Il y a une erreur lors du kick: ${error}`);
+      await interaction.editReply(await interaction.t("ERRORS.COMMAND_FAILED"));
     }
   },
 };

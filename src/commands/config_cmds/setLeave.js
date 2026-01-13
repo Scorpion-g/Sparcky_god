@@ -9,14 +9,20 @@ const GuildConfiguration = require("../../models/GuildConfiguration");
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("setleave")
-    .setDescription("Définir le canal d'aurevoir")
+    .setDescription("Définir le canal d'au revoir")
+    .setDescriptionLocalizations({
+      "en-US": "Set the leave channel",
+    })
     .addChannelOption((option) =>
       option
         .setName("channel")
-        .setDescription("Canal pour les messages d'aurevoir")
+        .setDescription("Canal pour les messages d'au revoir")
+        .setDescriptionLocalizations({
+          "en-US": "Channel for leave messages",
+        })
         .setRequired(true),
     )
-    .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild),
+    .setDefaultMemberPermissions(BigInt(PermissionFlagsBits.ManageGuild)),
 
   async execute(interaction) {
     const channel = interaction.options.getChannel("channel");
@@ -26,19 +32,24 @@ module.exports = {
         { leaveChannel: channel.id },
         { upsert: true },
       );
+
       const embed = new EmbedBuilder()
         .setColor("#0099ff")
-        .setTitle("Canal d'aurevoir défini")
-        .setDescription(`Le canal d'aurevoir a été défini sur ${channel}.`)
+        .setTitle(await interaction.t("CONFIG_CMD.LEAVE.TITLE"))
+        .setDescription(
+          await interaction.t("CONFIG_CMD.LEAVE.DESCRIPTION", {
+            channel: `${channel}`,
+          }),
+        )
         .setTimestamp();
+
       await interaction.reply({ embeds: [embed], ephemeral: true });
     } catch (error) {
       logger.error(
         `Erreur lors de la configuration du canal d'aurevoir: ${error}`,
       );
       await interaction.reply({
-        content:
-          "Une erreur est survenue lors de la configuration du canal d'aurevoir.",
+        content: await interaction.t("ERRORS.COMMAND_FAILED"),
         ephemeral: true,
       });
     }

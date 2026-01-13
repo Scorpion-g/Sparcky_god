@@ -1,4 +1,5 @@
 const { EmbedBuilder, PermissionsBitField } = require("discord.js");
+const { t } = require("../../utils/t");
 
 module.exports = {
   name: "messageCreate",
@@ -19,28 +20,31 @@ module.exports = {
       commandListString = commandListString.substring(0, 1021) + "...";
     }
 
-    // Construire l'embed
+    // Construire l'embed (i18n)
     const embed = new EmbedBuilder()
       .setColor("#0099ff")
-      .setTitle(`Bonjour, ${message.author.username} !`)
-      .setDescription("Merci de m’avoir mentionné !")
+      .setTitle(
+        await t(message, "MENTION.TITLE", { username: message.author.username }),
+      )
+      .setDescription(await t(message, "MENTION.DESCRIPTION"))
       .addFields(
         {
-          name: "Commandes Disponibles",
-          value: commandListString || "Aucune commande disponible.",
+          name: await t(message, "MENTION.COMMANDS.TITLE"),
+          value: commandListString || (await t(message, "MENTION.COMMANDS.EMPTY")),
         },
         {
-          name: "Invite",
-          value: `[Ajouter le bot à votre serveur](https://discord.com/oauth2/authorize?client_id=${process.env.CLIENT_ID}&scope=bot%20applications.commands&permissions=8)`,
+          name: await t(message, "MENTION.INVITE.TITLE"),
+          value: await t(message, "MENTION.INVITE.VALUE", {
+            clientId: process.env.CLIENT_ID,
+          }),
         },
         {
-          name: "Support",
-          value:
-            "[Rejoignez notre serveur support](https://discord.gg/your-invite-link)",
+          name: await t(message, "MENTION.SUPPORT.TITLE"),
+          value: await t(message, "MENTION.SUPPORT.VALUE"),
         },
       )
       .setTimestamp()
-      .setFooter({ text: "Bot développé par Scorpion" });
+      .setFooter({ text: await t(message, "MENTION.FOOTER") });
 
     // Vérifie les permissions du bot avant d’envoyer
     const botMember = await message.guild.members.fetch(client.user.id);

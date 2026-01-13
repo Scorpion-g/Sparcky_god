@@ -13,15 +13,10 @@ const { t } = require("../src/utils/t");
   await mongoose.connect(process.env.MONGODB_URI);
   await initI18n();
 
-  console.log("TICKET.NOT_CONFIGURED:", await t({ guildId }, "TICKET.NOT_CONFIGURED"));
-  console.log("TICKET.PANEL.TITLE:", await t({ guildId }, "TICKET.PANEL.TITLE"));
+  console.log("TICKET.CLOSE.SUCCESS:", await t({ guildId }, "TICKET.CLOSE.SUCCESS"));
   console.log(
-    "TICKET.CHANNEL.TITLE:",
-    await t({ guildId }, "TICKET.CHANNEL.TITLE", { type: "Support" }),
-  );
-  console.log(
-    "TICKET.CONFIGURED:",
-    await t({ guildId }, "TICKET.CONFIGURED", { channel: "#tickets" }),
+    "TICKET.TRANSCRIPT_FILENAME:",
+    await t({ guildId }, "TICKET.TRANSCRIPT_FILENAME", { channel: "ticket-test" }),
   );
 
   await mongoose.disconnect();

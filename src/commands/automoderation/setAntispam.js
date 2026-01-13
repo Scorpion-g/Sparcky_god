@@ -10,17 +10,25 @@ module.exports = {
   data: new SlashCommandBuilder()
     .setName("setantispam")
     .setDescription("Activer ou désactiver l'antispam")
+    .setDescriptionLocalizations({
+      fr: "Activer ou désactiver l'antispam",
+      "en-US": "Enable or disable antispam",
+    })
     .addStringOption((option) =>
       option
         .setName("etat")
         .setDescription("Choisir l'état de l'antispam")
+        .setDescriptionLocalizations({
+          fr: "Choisir l'état de l'antispam",
+          "en-US": "Choose antispam state",
+        })
         .setRequired(true)
         .addChoices(
-          { name: "activer", value: "on" },
-          { name: "désactiver", value: "off" },
+          { name: "activer", name_localizations: { fr: "activer", "en-US": "enable" }, value: "on" },
+          { name: "désactiver", name_localizations: { fr: "désactiver", "en-US": "disable" }, value: "off" },
         ),
     )
-    .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild),
+    .setDefaultMemberPermissions(BigInt(PermissionFlagsBits.ManageGuild)),
   async execute(interaction) {
     const etat = interaction.options.getString("etat");
 
@@ -44,9 +52,13 @@ module.exports = {
 
       const embed = new EmbedBuilder()
         .setColor("#0099ff")
-        .setTitle("Configuration de l'antispam")
+        .setTitle(await interaction.t("AUTOMOD_CONFIG.ANTISPAM.TITLE"))
         .setDescription(
-          `L'antispam a été **${etat === "on" ? "activé" : "désactivé"}**.`,
+          await interaction.t(
+            etat === "on"
+              ? "AUTOMOD_CONFIG.ANTISPAM.ENABLED"
+              : "AUTOMOD_CONFIG.ANTISPAM.DISABLED",
+          ),
         )
         .setTimestamp();
 
@@ -54,8 +66,7 @@ module.exports = {
     } catch (error) {
       logger.error(`Erreur lors de la configuration de l'antispam: ${error}`);
       await interaction.editReply({
-        content:
-          "Une erreur est survenue lors de la configuration de l'antispam.",
+        content: await interaction.t("ERRORS.COMMAND_FAILED"),
         ephemeral: true,
       });
     }

@@ -1,6 +1,7 @@
 const { EmbedBuilder } = require('discord.js');
 const logger = require('../../utils/logger');
 const GuildConfiguration = require('../../models/GuildConfiguration');
+const { t } = require('../../utils/t');
 
 module.exports = {
   name: 'guildMemberAdd',
@@ -14,8 +15,8 @@ module.exports = {
 
       const embed = new EmbedBuilder()
         .setColor('Green')
-        .setTitle(`Bienvenue ${member.user.username}!`)
-        .setDescription(`Nous sommes ravis de te voir sur le serveur 🎉`)
+        .setTitle(await t({ guildId: member.guild.id }, 'WELCOME.TITLE', { username: member.user.username }))
+        .setDescription(await t({ guildId: member.guild.id }, 'WELCOME.DESCRIPTION', { guild: member.guild.name }))
         .setThumbnail(member.user.displayAvatarURL({ dynamic: true }));
 
       channel.send({ embeds: [embed] });
@@ -30,4 +31,3 @@ module.exports = {
     }
   },
 };
-;

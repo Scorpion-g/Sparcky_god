@@ -10,17 +10,25 @@ module.exports = {
   data: new SlashCommandBuilder()
     .setName("setantilink")
     .setDescription("Activer ou désactiver l'antilink")
+    .setDescriptionLocalizations({
+      fr: "Activer ou désactiver l'antilink",
+      "en-US": "Enable or disable antilink",
+    })
     .addStringOption((option) =>
       option
         .setName("etat")
         .setDescription("Choisir l'état de l'antilink (on/off)")
+        .setDescriptionLocalizations({
+          fr: "Choisir l'état de l'antilink (on/off)",
+          "en-US": "Choose antilink state (on/off)",
+        })
         .setRequired(true)
         .addChoices(
-          { name: "on", value: "on" },
-          { name: "off", value: "off" }
+          { name: "on", name_localizations: { fr: "on", "en-US": "on" }, value: "on" },
+          { name: "off", name_localizations: { fr: "off", "en-US": "off" }, value: "off" },
         ),
     )
-    .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild),
+    .setDefaultMemberPermissions(BigInt(PermissionFlagsBits.ManageGuild)),
 
   async execute(interaction) {
     const etat = interaction.options.getString("etat");
@@ -37,13 +45,17 @@ module.exports = {
         });
       }
 
-      guildConfig.antilink = etat==="on";
+      guildConfig.antilink = etat === "on";
       await guildConfig.save();
 
       const embed = new EmbedBuilder()
-        .setTitle("⚙️ Configuration de l'Antilink")
+        .setTitle(await interaction.t("AUTOMOD_CONFIG.ANTILINK.TITLE"))
         .setDescription(
-          `L'antilink a été **${etat === "on" ? "activé ✅" : "désactivé ❌"}**.`
+          await interaction.t(
+            etat === "on"
+              ? "AUTOMOD_CONFIG.ANTILINK.ENABLED"
+              : "AUTOMOD_CONFIG.ANTILINK.DISABLED",
+          ),
         )
         .setColor(etat === "on" ? "#00FF00" : "#FF0000");
 
@@ -52,10 +64,8 @@ module.exports = {
     } catch (error) {
       logger.error(`Erreur lors de la configuration de l'antilink: ${error}`);
       await interaction.editReply({
-        content:
-          "❌ Une erreur est survenue lors de la configuration de l'antilink.",
+        content: await interaction.t("ERRORS.COMMAND_FAILED"),
       });
     }
   },
 };
-

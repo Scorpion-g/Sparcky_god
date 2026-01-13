@@ -9,46 +9,52 @@ const GuildConfiguration = require("../../models/GuildConfiguration");
 module.exports = {
   /**
    *
-   * @param {Client} client
-   * @param {Interaction} interaction
+   * @param {import("discord.js").Client} client
+   * @param {import("discord.js").ChatInputCommandInteraction} interaction
    *
    */
   data: new SlashCommandBuilder()
     .setName("ban")
     .setDescription("Pour bannir un membre du serveur")
+    .setDescriptionLocalizations({
+      "en-US": "Ban a server member",
+    })
     .addMentionableOption((option) =>
       option
         .setName("membre")
         .setDescription("Bannir un membre")
+        .setDescriptionLocalizations({
+          "en-US": "Member to ban",
+        })
         .setRequired(true),
     )
     .addStringOption((option) =>
       option
         .setName("raison")
         .setDescription("La raison du bannissement du membre")
+        .setDescriptionLocalizations({
+          "en-US": "Reason for banning the member",
+        })
         .setRequired(false),
     )
-    .setDefaultMemberPermissions(PermissionFlagsBits.BanMembers),
+    .setDefaultMemberPermissions(BigInt(PermissionFlagsBits.BanMembers)),
   async execute(interaction) {
     const membreId = interaction.options.get("membre").value;
     const raison =
-      interaction.options.get("raison")?.value || "Pas de raison donné";
+      interaction.options.get("raison")?.value ||
+      (await interaction.t("COMMON.DEFAULT_REASON"));
 
     await interaction.deferReply();
 
-    const member = await interaction.guild.members.fetch(membreId);
+    const member = await interaction.guild.members.fetch(membreId).catch(() => null);
 
     if (!member) {
-      await interaction.editReply(
-        "Le membre mentionné n'est pas sur le serveur",
-      );
+      await interaction.editReply(await interaction.t("ERRORS.MEMBER_NOT_IN_GUILD"));
       return;
     }
 
     if (member.id === interaction.guild.ownerId) {
-      await interaction.editReply(
-        "Tu ne peux pas bannir le créateur du serveur",
-      );
+      await interaction.editReply(await interaction.t("ERRORS.CANNOT_SANCTION_OWNER"));
       return;
     }
 
@@ -58,27 +64,34 @@ module.exports = {
 
     if (memberRolePosition >= requestUserRolePosition) {
       await interaction.editReply(
-        "Vous ne pouvez pas bannir ce membre car il a un rôle superieur ou égale  à vous",
+        await interaction.t("ERRORS.ROLE_TOO_HIGH_TARGET", { action: "ban" }),
       );
       return;
     }
     if (memberRolePosition >= botRolePosition) {
       await interaction.editReply(
-        "je ne peux pas bannir ce membre car il a un rôle superieur ou égale a vous",
+        await interaction.t("ERRORS.ROLE_TOO_HIGH_BOT", { action: "ban" }),
       );
       return;
     }
     try {
       await member.ban({ raison });
       await interaction.editReply(
-        `Le membre ${member} a été banni \nRaison: ${raison}`,
+        await interaction.t("MODERATION.BAN.SUCCESS", {
+          member: `${member}`,
+          reason: raison,
+        }),
       );
       await member
         .send(
-          `Tu as été banni du serveur ${interaction.guild.name} par ${interaction.user.tag} \nRaison: ${raison}`,
+          await interaction.t("MODERATION.BAN.DM", {
+            guild: interaction.guild.name,
+            moderator: interaction.user.tag,
+            reason: raison,
+          }),
         )
         .catch(() => {});
-      // Log the ban action in the mod-log channel if it exists
+
       const guildConfig = await GuildConfiguration.findOne({
         guildId: interaction.guild.id,
       });
@@ -90,15 +103,24 @@ module.exports = {
           embeds: [
             new EmbedBuilder()
               .setColor("#00ff99")
-              .setTitle("📋 Log ban")
-              .setDescription(`${member} a été banni par ${interaction.user}`)
-              .addFields({ name: "Raison", value: raison })
+              .setTitle(await interaction.t("MODERATION.BAN.LOG.TITLE"))
+              .setDescription(
+                await interaction.t("MODERATION.BAN.LOG.DESCRIPTION", {
+                  member: `${member}`,
+                  moderator: `${interaction.user}`,
+                }),
+              )
+              .addFields({
+                name: await interaction.t("COMMON.REASON"),
+                value: raison,
+              })
               .setTimestamp(),
           ],
         });
       }
     } catch (error) {
       logger.error(`Il y a une erreur lors du bannissement: ${error}`);
+      await interaction.editReply(await interaction.t("ERRORS.COMMAND_FAILED"));
     }
   },
 };

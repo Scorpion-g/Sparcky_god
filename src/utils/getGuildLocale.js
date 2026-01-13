@@ -1,4 +1,5 @@
 const GuildConfiguration = require("../models/GuildConfiguration");
+const logger = require("./logger");
 
 const SUPPORTED_LOCALES = new Set(["fr", "en"]);
 
@@ -22,6 +23,13 @@ async function getGuildLocale({ guildId, interaction } = {}) {
   if (resolvedGuildId) {
     const conf = await GuildConfiguration.findOne({ guildId: resolvedGuildId }).lean();
     const dbLocale = normalizeLocale(conf?.language);
+
+    if (process.env.DEBUG_I18N === "1") {
+      logger.info(
+        `[i18n] guildId=${resolvedGuildId} db.language=${conf?.language} -> locale=${dbLocale || "(none)"}`,
+      );
+    }
+
     if (dbLocale) return dbLocale;
   }
 
@@ -39,4 +47,3 @@ module.exports = {
   normalizeLocale,
   SUPPORTED_LOCALES,
 };
-

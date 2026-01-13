@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 require("dotenv").config();
 const mongoose = require("mongoose");
 const { initI18n } = require("../src/utils/i18n");
@@ -23,4 +22,3 @@ const { t } = require("../src/utils/t");
 
   await mongoose.disconnect();
 })();
-

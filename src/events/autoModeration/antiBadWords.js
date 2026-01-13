@@ -1,114 +1,140 @@
 const { EmbedBuilder, PermissionFlagsBits } = require("discord.js");
 const GuildConfiguration = require("../../models/GuildConfiguration");
-const { containsBadWord } = require("../../utils/badWordUtils"); // ton util
+const { containsBadWord } = require("../../utils/badWordUtils");
 const { addWarn } = require("../../utils/warnUtils");
 const logger = require("../../utils/logger");
+const { t } = require("../../utils/t");
+
 module.exports = {
   name: "messageCreate",
   async execute(client, message) {
     if (message.author.bot || !message.guild) return;
 
-    // Récupérer la config serveur
-    const guildConfig = await GuildConfiguration.findOne({
-      guildId: message.guild.id,
-    });
+    const guildId = message.guild.id;
 
-    // Vérifier si l'anti-link est activé
-    if (!guildConfig?.antilink) return;
+    const guildConfig = await GuildConfiguration.findOne({ guildId });
 
-    const serverBadWords = guildConfig?.badWords || []; // mots du serveur
+    // ✅ Ici c'est bien antiBadWords (et pas antilink)
+    if (!guildConfig?.antiBadWords) return;
+
+    const serverBadWords = guildConfig?.badWords || [];
     const messageContent = message.content;
 
-    // Liste combinée : serveur + global
-    const badWordsList = [...serverBadWords]; // defaultBadWords sera utilisé par containsBadWord si nécessaire
+    const badWordsList = [...serverBadWords];
 
-    if (containsBadWord(messageContent, badWordsList)) {
-      try {
-        // Supprimer le message si possible
-        if (message.deletable) await message.delete();
+    if (!containsBadWord(messageContent, badWordsList)) return;
 
-        // Message d’avertissement
-        const warningEmbed = new EmbedBuilder()
-          .setColor("#FF0000")
+    try {
+      if (message.deletable) await message.delete().catch(() => {});
+
+      const warningEmbed = new EmbedBuilder()
+        .setColor("#FF0000")
+        .setDescription(
+          await t(
+            { guildId },
+            "AUTOMOD.ANTIBADWORDS.WARNING",
+            { userId: message.author.id },
+          ),
+        )
+        .setTimestamp();
+
+      const warningMsg = await message.channel.send({ embeds: [warningEmbed] });
+      if (warningMsg.deletable) {
+        setTimeout(() => warningMsg.delete().catch(() => {}), 5000);
+      }
+
+      if (
+        message.guild.members.me.permissions.has(
+          PermissionFlagsBits.ModerateMembers,
+        )
+      ) {
+        const reason = await t({ guildId }, "AUTOMOD.ANTIBADWORDS.REASON");
+
+        await message.member.timeout(10 * 1000, reason).catch(() => {});
+
+        const timeoutEmbed = new EmbedBuilder()
+          .setColor("#FFA500")
           .setDescription(
-            `<@${message.author.id}>, ton message contient un mot interdit et a été supprimé.`,
+            await t(
+              { guildId },
+              "AUTOMOD.ANTIBADWORDS.TIMEOUT",
+              { userId: message.author.id, seconds: 10 },
+            ),
           )
           .setTimestamp();
 
-        const warningMsg = await message.channel.send({
-          embeds: [warningEmbed],
-        });
+        const timeoutMsg = await message.channel.send({ embeds: [timeoutEmbed] });
+        if (timeoutMsg.deletable)
+          setTimeout(() => timeoutMsg.delete().catch(() => {}), 5000);
 
-        // Supprimer l’avertissement après 5 secondes
-        if (warningMsg.deletable) {
-          setTimeout(() => warningMsg.delete().catch(() => {}), 5000);
-        }
+        const warnCount = await addWarn(message.member, reason);
 
-        // Timeout si le bot a la permission
-        if (
-          message.guild.members.me.permissions.has(
-            PermissionFlagsBits.ModerateMembers,
-          )
-        ) {
-          await message.member.timeout(10 * 1000, "Mot interdit détecté");
-          const timeoutEmbed = new EmbedBuilder()
-            .setColor("#FFA500")
-            .setDescription(
-              `<@${message.author.id}> a été mis en timeout pendant 10 secondes pour avoir utilisé un mot interdit.`,
-            )
-            .setTimestamp();
+        await message.author
+          .send({
+            embeds: [
+              new EmbedBuilder()
+                .setColor("#FF0000")
+                .setTitle(
+                  await t({ guildId }, "AUTOMOD.DM.WARN_TITLE", {
+                    guild: message.guild.name,
+                  }),
+                )
+                .addFields(
+                  {
+                    name: await t({ guildId }, "COMMON.REASON"),
+                    value: reason,
+                  },
+                  {
+                    name: await t({ guildId }, "AUTOMOD.DM.TOTAL_WARNS"),
+                    value: `${warnCount}`,
+                  },
+                )
+                .setTimestamp(),
+            ],
+          })
+          .catch(() => {});
 
-          const timeoutMsg = await message.channel.send({
-            embeds: [timeoutEmbed],
-          });
-          if (timeoutMsg.deletable)
-            setTimeout(() => timeoutMsg.delete().catch(() => {}), 5000);
-
-          //ajouter un warn à l'utilisateur
-          const warnCount = await addWarn(
-            message.member,
-            "Utilisation de mots interdits",
-          );
-          // DM à l'utilisateur
-          await message.author
-            .send({
-              embeds: [
-                new EmbedBuilder()
-                  .setColor("#FF0000")
-                  .setTitle(`⚠️ Vous avez été warn sur ${message.guild.name}`)
-                  .addFields(
-                    { name: "Raison", value: "Utilisation de mots interdits" },
-                    { name: "Total de warns", value: `${warnCount}` },
-                  )
-                  .setTimestamp(),
-              ],
-            })
-            .catch(() => {});
-        }
-
-        // Log dans le channel de modération si configuré
         const logChannel = message.guild.channels.cache.get(
           guildConfig?.modLogChannel,
         );
         if (logChannel && logChannel.isTextBased()) {
+          const truncated =
+            messageContent.length > 1024
+              ? messageContent.slice(0, 1021) + "..."
+              : messageContent;
+
           const logEmbed = new EmbedBuilder()
             .setColor("#FF0000")
-            .setTitle("🛑 Mot Interdit Détecté")
+            .setTitle(await t({ guildId }, "AUTOMOD.ANTIBADWORDS.LOG.TITLE"))
             .addFields(
               {
-                name: "Utilisateur",
+                name: await t({ guildId }, "AUTOMOD.LOG.USER"),
                 value: `${message.author.tag} (${message.author.id})`,
                 inline: false,
               },
-              { name: "Message", value: messageContent, inline: false },
-              { name: "Canal", value: `${message.channel}`, inline: true },
+              {
+                name: await t({ guildId }, "AUTOMOD.LOG.MESSAGE"),
+                value: truncated,
+                inline: false,
+              },
+              {
+                name: await t({ guildId }, "AUTOMOD.LOG.CHANNEL"),
+                value: `${message.channel}`,
+                inline: true,
+              },
+              {
+                name: await t({ guildId }, "AUTOMOD.LOG.TOTAL_WARNS"),
+                value: `${warnCount}`,
+                inline: true,
+              },
             )
             .setTimestamp();
+
           logChannel.send({ embeds: [logEmbed] }).catch(() => {});
         }
-      } catch (error) {
-        logger.error("Erreur lors de la gestion des mots interdits :", error);
       }
+    } catch (error) {
+      logger.error("Erreur lors de la gestion des mots interdits :", error);
     }
   },
 };

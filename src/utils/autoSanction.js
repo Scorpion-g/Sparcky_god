@@ -1,6 +1,7 @@
 // utils/autoSanction.js
 const { EmbedBuilder, PermissionFlagsBits } = require("discord.js");
 const GuildConfiguration = require("../models/GuildConfiguration");
+const { t } = require("./t");
 
 /**
  * Vérifie le nombre de warns et applique la sanction automatique
@@ -16,21 +17,21 @@ async function checkAndSanction(member, warnCount) {
   if (!guildConfig?.autoSanction) return;
 
   let action;
-  let reasonText = "";
 
   // Définir les actions selon le nombre de warns
   if (warnCount === 3) {
     action = "timeout";
-    reasonText = "Atteint 3 warns - Sanction automatique";
   } else if (warnCount === 5) {
     action = "kick";
-    reasonText = "Atteint 5 warns - Sanction automatique";
   } else if (warnCount === 7) {
     action = "ban";
-    reasonText = "Atteint 7 warns - Sanction automatique";
   } else {
     return; // Pas d'action à prendre
   }
+
+  const reasonText = await t({ guildId: member.guild.id }, "AUTOSANCTION.REASON", {
+    warnCount,
+  });
 
   try {
     const logChannel = member.guild.channels.cache.get(
@@ -48,7 +49,10 @@ async function checkAndSanction(member, warnCount) {
         const embed = new EmbedBuilder()
           .setColor("#FFFF00")
           .setDescription(
-            `⏲️ <@${member.id}> a été mis en timeout automatiquement pour avoir atteint ${warnCount} warns.`,
+            await t({ guildId: member.guild.id }, "AUTOSANCTION.LOG.TIMEOUT", {
+              memberId: member.id,
+              warnCount,
+            }),
           )
           .setTimestamp();
 
@@ -62,7 +66,10 @@ async function checkAndSanction(member, warnCount) {
         const embed = new EmbedBuilder()
           .setColor("#FFA500")
           .setDescription(
-            `🔨 <@${member.id}> a été expulsé automatiquement pour avoir atteint ${warnCount} warns.`,
+            await t({ guildId: member.guild.id }, "AUTOSANCTION.LOG.KICK", {
+              memberId: member.id,
+              warnCount,
+            }),
           )
           .setTimestamp();
 
@@ -76,7 +83,10 @@ async function checkAndSanction(member, warnCount) {
         const embed = new EmbedBuilder()
           .setColor("#FF0000")
           .setDescription(
-            `🔨 <@${member.id}> a été banni automatiquement pour avoir atteint ${warnCount} warns.`,
+            await t({ guildId: member.guild.id }, "AUTOSANCTION.LOG.BAN", {
+              memberId: member.id,
+              warnCount,
+            }),
           )
           .setTimestamp();
 

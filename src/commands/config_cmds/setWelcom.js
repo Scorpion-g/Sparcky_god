@@ -10,13 +10,19 @@ module.exports = {
   data: new SlashCommandBuilder()
     .setName("setwelcome")
     .setDescription("Définir le canal de bienvenue")
+    .setDescriptionLocalizations({
+      "en-US": "Set the welcome channel",
+    })
     .addChannelOption((option) =>
       option
         .setName("channel")
         .setDescription("Canal pour les messages de bienvenue")
+        .setDescriptionLocalizations({
+          "en-US": "Channel for welcome messages",
+        })
         .setRequired(true),
     )
-    .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild),
+    .setDefaultMemberPermissions(BigInt(PermissionFlagsBits.ManageGuild)),
 
   async execute(interaction) {
     const channel = interaction.options.getChannel("channel");
@@ -26,19 +32,24 @@ module.exports = {
         { welcomeChannel: channel.id },
         { upsert: true },
       );
+
       const embed = new EmbedBuilder()
         .setColor("#0099ff")
-        .setTitle("Canal de bienvenue défini")
-        .setDescription(`Le canal de bienvenue a été défini sur ${channel}.`)
+        .setTitle(await interaction.t("CONFIG_CMD.WELCOME.TITLE"))
+        .setDescription(
+          await interaction.t("CONFIG_CMD.WELCOME.DESCRIPTION", {
+            channel: `${channel}`,
+          }),
+        )
         .setTimestamp();
+
       await interaction.reply({ embeds: [embed], ephemeral: true });
     } catch (error) {
       logger.error(
         `Erreur lors de la configuration du canal de bienvenue: ${error}`,
       );
       await interaction.reply({
-        content:
-          "Une erreur est survenue lors de la configuration du canal de bienvenue.",
+        content: await interaction.t("ERRORS.COMMAND_FAILED"),
         ephemeral: true,
       });
     }

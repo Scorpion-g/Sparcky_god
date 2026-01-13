@@ -1,9 +1,13 @@
 const logger = require("../../utils/logger"); // Assure-toi d'avoir ton logger Winston ici
+const { attachT } = require("../../utils/t");
 
 module.exports = {
   name: "interactionCreate",
   once: false,
   async execute(client, interaction) {
+    // Attache le helper i18n
+    attachT(interaction);
+
     // --- Autocomplete ---
     if (interaction.isAutocomplete()) {
       const command = client.commands.get(interaction.commandName);
@@ -31,18 +35,19 @@ module.exports = {
     } catch (error) {
       logger.error(`Erreur lors de l'exécution de la commande ${interaction.commandName} par ${interaction.user.tag}: ${error.stack}`);
 
+      const msg = await interaction.t("ERRORS.COMMAND_FAILED");
+
       if (interaction.replied || interaction.deferred) {
         await interaction.followUp({
-          content: "❌ Une erreur est survenue lors de l'exécution de cette commande.",
+          content: msg,
           ephemeral: true,
         });
       } else {
         await interaction.reply({
-          content: "❌ Une erreur est survenue lors de l'exécution de cette commande.",
+          content: msg,
           ephemeral: true,
         });
       }
     }
   },
 };
-

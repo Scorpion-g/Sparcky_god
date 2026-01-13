@@ -1,6 +1,7 @@
 const { EmbedBuilder } = require('discord.js');
 const GuildConfiguration = require('../../models/GuildConfiguration');
 const logger = require('../../utils/logger');
+const { t } = require('../../utils/t');
 module.exports = {
   name: 'guildMemberRemove',
   async execute(client, member) {
@@ -13,8 +14,8 @@ module.exports = {
 
       const embed = new EmbedBuilder()
         .setColor('Red')
-        .setTitle(`Aurevoir ${member.user.username}!`)
-        .setDescription(`Nous sommes ravis de t'avoir acceuilli sur le serveur 🎉`)
+        .setTitle(await t({ guildId: member.guild.id }, 'LEAVE.TITLE', { username: member.user.username }))
+        .setDescription(await t({ guildId: member.guild.id }, 'LEAVE.DESCRIPTION', { guild: member.guild.name }))
         .setThumbnail(member.user.displayAvatarURL({ dynamic: true }));
 
       channel.send({ embeds: [embed] });
@@ -23,4 +24,3 @@ module.exports = {
     }
   },
 };
-;

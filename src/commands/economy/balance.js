@@ -1,28 +1,30 @@
-const {
-  SlashCommandBuilder,
-} = require("discord.js");
+const { SlashCommandBuilder } = require("discord.js");
 const User = require("../../models/User");
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("money")
     .setDescription("Voir votre argent ou celui d'un membre.")
+    .setDescriptionLocalizations({
+      "en-US": "View your money or another member's money.",
+    })
     .addUserOption((option) =>
       option
         .setName("user")
         .setDescription("Le membre dont vous voulez voir l'argent.")
+        .setDescriptionLocalizations({
+          "en-US": "The member whose money you want to view.",
+        })
         .setRequired(false),
     ),
+
   /**
-   *
-   * @param {Client} client
-   * @param {Interaction} interaction
+   * @param {import("discord.js").ChatInputCommandInteraction} interaction
    */
   async execute(interaction) {
     if (!interaction.inGuild()) {
-      interaction.reply({
-        content:
-          "Vous ne pouvez éxecuter cette commande en dehors d'un serveur",
+      await interaction.reply({
+        content: await interaction.t("ERRORS.GUILD_ONLY"),
         ephemeral: true,
       });
       return;
@@ -39,14 +41,19 @@ module.exports = {
     });
 
     if (!user) {
-      interaction.editReply(`<@${targetUserId}> n'as pas encore d'argent.`);
+      await interaction.editReply(
+        await interaction.t("ECONOMY.MONEY.NO_ACCOUNT", { userId: targetUserId }),
+      );
       return;
     }
 
-    interaction.editReply(
+    await interaction.editReply(
       targetUserId === interaction.member.id
-        ? `Tu as **${user.balance} $**.`
-        : `<@${targetUserId}> a **${user.balance} $**.`,
+        ? await interaction.t("ECONOMY.MONEY.SELF", { balance: user.balance })
+        : await interaction.t("ECONOMY.MONEY.OTHER", {
+            userId: targetUserId,
+            balance: user.balance,
+          }),
     );
   },
 };

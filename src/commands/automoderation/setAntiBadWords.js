@@ -11,23 +11,29 @@ module.exports = {
   data: new SlashCommandBuilder()
     .setName("setantibadwords")
     .setDescription("Activer ou désactiver l'anti bad words")
+    .setDescriptionLocalizations({
+      fr: "Activer ou désactiver l'anti bad words",
+      "en-US": "Enable or disable anti bad words",
+    })
     .addBooleanOption((option) =>
       option
-        .setName("état")
+        .setName("etat")
         .setDescription("Activer ou désactiver l'anti bad words")
+        .setDescriptionLocalizations({
+          fr: "Activer ou désactiver l'anti bad words",
+          "en-US": "Enable or disable anti bad words",
+        })
         .setRequired(true),
     )
-    .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild),
+    .setDefaultMemberPermissions(BigInt(PermissionFlagsBits.ManageGuild)),
 
   /**
-   *
-   * @param {import("discord.js").Client} client
-   * @param {import("discord.js").CommandInteraction} interaction
+   * @param {import("discord.js").ChatInputCommandInteraction} interaction
    */
   async execute(interaction) {
-    const état = interaction.options.get("état").value;
+    const enabled = interaction.options.get("etat").value;
 
-    await interaction.deferReply();
+    await interaction.deferReply({ ephemeral: true });
 
     let guildConfig = await GuildConfiguration.findOne({
       guildId: interaction.guild.id,
@@ -36,30 +42,36 @@ module.exports = {
       if (!guildConfig) {
         guildConfig = new GuildConfiguration({
           guildId: interaction.guild.id,
-          antiBadWords: état,
+          antiBadWords: enabled,
         });
       } else {
-        guildConfig.antiBadWords = état;
+        guildConfig.antiBadWords = enabled;
       }
 
       await guildConfig.save();
 
       const embed = new EmbedBuilder()
-        .setColor(état ? "#00ff99" : "#ff3300")
+        .setColor(enabled ? "#00ff99" : "#ff3300")
         .setTitle(
-          état ? "✅ Anti Bad Words Activé" : "❌ Anti Bad Words Désactivé",
+          await interaction.t(
+            enabled
+              ? "AUTOMOD_CONFIG.ANTIBADWORDS.ENABLED_TITLE"
+              : "AUTOMOD_CONFIG.ANTIBADWORDS.DISABLED_TITLE",
+          ),
         )
         .setDescription(
-          `L'anti bad words a été ${état ? "activé" : "désactivé"} avec succès.`,
+          await interaction.t(
+            enabled
+              ? "AUTOMOD_CONFIG.ANTIBADWORDS.ENABLED_DESC"
+              : "AUTOMOD_CONFIG.ANTIBADWORDS.DISABLED_DESC",
+          ),
         )
         .setTimestamp();
 
       await interaction.editReply({ embeds: [embed] });
     } catch (error) {
       logger.error(error);
-      await interaction.editReply(
-        "Une erreur est survenue lors de la mise à jour de la configuration.",
-      );
+      await interaction.editReply(await interaction.t("ERRORS.COMMAND_FAILED"));
     }
   },
 };

@@ -1,48 +1,45 @@
-const { EmbedBuilder, PermissionFlagsBits } = require("discord.js");
+const { EmbedBuilder } = require("discord.js");
 const GuildConfiguration = require("../../models/GuildConfiguration");
 const logger = require("../../utils/logger");
+const { t } = require("../../utils/t");
 
 module.exports = {
   name: "guildMemberAdd",
   async execute(client, member) {
     try {
-      const guildConfig = await GuildConfiguration.findOne({
-        guildId: member.guild.id,
-      });
-      if (!guildConfig || !guildConfig.antiRaid) return;
+      const guildId = member.guild.id;
 
-      // Logique anti-raid ici
-      // Par exemple, vérifier si le membre est nouveau et appliquer des restrictions
+      const guildConfig = await GuildConfiguration.findOne({ guildId });
+      if (!guildConfig || !guildConfig.antiRaid) return;
 
       const embed = new EmbedBuilder()
         .setColor("Red")
-        .setTitle("Anti-Raid Alert")
-        .setDescription(`Un nouveau membre a rejoint: ${member.user.tag}`)
+        .setTitle(await t({ guildId }, "AUTOMOD.ANTIRAID.LOG.TITLE"))
+        .setDescription(
+          await t({ guildId }, "AUTOMOD.ANTIRAID.LOG.DESCRIPTION", {
+            tag: member.user.tag,
+          }),
+        )
         .setTimestamp();
 
-      // Envoyer une notification dans un canal spécifique si nécessaire
-      const logChannelId = guildConfig.modLogChannel; // Assurez-vous que ce champ existe dans votre modèle
+      const logChannelId = guildConfig.modLogChannel;
       if (logChannelId) {
         const logChannel = member.guild.channels.cache.get(logChannelId);
-        if (logChannel) {
-          logChannel.send({ embeds: [embed] });
+        if (logChannel && logChannel.isTextBased()) {
+          logChannel.send({ embeds: [embed] }).catch(() => {});
         }
       }
-      //mp le membre
+
       try {
-        await member.send(
-          "Le serveur est actuellement en système antiraid merci de votre compréhension.",
-        );
+        await member.send(await t({ guildId }, "AUTOMOD.ANTIRAID.DM"));
       } catch (err) {
         logger.error("Impossible d'envoyer un MP au membre:", err);
       }
-      // Kick le membre si nécessaire
-      await member.kick("Anti-raid system activated");
+
+      const kickReason = await t({ guildId }, "AUTOMOD.ANTIRAID.KICK_REASON");
+      await member.kick(kickReason).catch(() => {});
     } catch (error) {
       logger.error("Erreur event guildMemberAdd:", error);
     }
   },
 };
-//     }
-//   },
-// };

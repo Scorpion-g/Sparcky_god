@@ -1,19 +1,23 @@
 const { EmbedBuilder } = require("discord.js");
-const logger = require("../../utils/logger"); // Assure-toi d'avoir ton logger Winston ici
+const logger = require("../../utils/logger");
 const TicketSettings = require("../../models/Ticket");
+const { attachT } = require("../../utils/t");
+
 module.exports = {
   name: "interactionCreate",
   once: false,
   async execute(client, interaction) {
+    attachT(interaction);
+
     const guild = interaction.guild;
     if (!interaction.isStringSelectMenu()) return;
-    if (interaction.customId !== `ticket_menu`) return;
+    if (interaction.customId !== "ticket_menu") return;
 
     const selectedType = interaction.values[0];
     const ticketSettings = await TicketSettings.findOne({ guildId: guild.id });
     if (!ticketSettings) {
       return interaction.reply({
-        content: "Le système de ticket n'est pas configuré sur ce serveur.",
+        content: await interaction.t("TICKET.NOT_CONFIGURED"),
         ephemeral: true,
       });
     }
@@ -21,9 +25,6 @@ module.exports = {
     const supportRoleId = ticketSettings.supportRoleId;
     const ticketCategoryId = ticketSettings.ticketCategoryId;
 
-      
-
-    // Vérifie si l'utilisateur a déjà un ticket ouvert
     const existingChannel = guild.channels.cache.find(
       (channel) =>
         channel.name === `ticket-${interaction.user.username}` &&
@@ -31,19 +32,20 @@ module.exports = {
     );
     if (existingChannel) {
       return interaction.reply({
-        content: `Vous avez déjà un ticket ouvert : ${existingChannel}`,
+        content: await interaction.t("TICKET.ALREADY_OPEN", {
+          channel: `${existingChannel}`,
+        }),
         ephemeral: true,
       });
     }
 
-    // Permissions pour le salon de ticket
     const permissions = [
       {
-        id: guild.roles.everyone, // Tout le monde
+        id: guild.roles.everyone,
         deny: ["ViewChannel"],
       },
       {
-        id: interaction.user.id, // L'utilisateur qui a ouvert le ticket
+        id: interaction.user.id,
         allow: [
           "ViewChannel",
           "SendMessages",
@@ -53,7 +55,7 @@ module.exports = {
         ],
       },
       {
-        id: supportRoleId, // Rôle de support
+        id: supportRoleId,
         allow: [
           "ViewChannel",
           "SendMessages",
@@ -64,24 +66,23 @@ module.exports = {
       },
     ];
 
-    // Crée le salon de ticket
     try {
-      // Crée le salon de ticket
       const ticketChannel = await guild.channels.create({
         name: `ticket-${interaction.user.username}`,
-        type: 0, // Type de salon texte
+        type: 0,
         parent: ticketCategoryId,
         permissionOverwrites: permissions,
-        reason: `Ticket créé par ${interaction.user.tag} (${interaction.user.id})`,
+        reason: await interaction.t("TICKET.AUDIT_REASON", {
+          tag: interaction.user.tag,
+          userId: interaction.user.id,
+        }),
       });
 
       const embed = new EmbedBuilder()
-        .setTitle(`Nouveau ticket - ${selectedType}`)
-        .setDescription(
-          `Bonjour ${interaction.user}, un membre de notre équipe de support vous répondra bientôt.\n\nVeuillez décrire votre problème en détail pour que nous puissions vous aider au mieux.`,
-        )
+        .setTitle(await interaction.t("TICKET.CHANNEL.TITLE", { type: selectedType }))
+        .setDescription(await interaction.t("TICKET.CHANNEL.DESCRIPTION", { user: `${interaction.user}` }))
         .setColor("Blue")
-        .setFooter({ text: "Support Team" })
+        .setFooter({ text: await interaction.t("TICKET.CHANNEL.FOOTER") })
         .setTimestamp();
 
       await ticketChannel.send({
@@ -90,14 +91,13 @@ module.exports = {
       });
 
       await interaction.reply({
-        content: `Votre ticket a été créé : ${ticketChannel}`,
+        content: await interaction.t("TICKET.CREATED", { channel: `${ticketChannel}` }),
         ephemeral: true,
       });
     } catch (error) {
       logger.error(`Erreur lors de la création du ticket : ${error}`);
       return interaction.reply({
-        content:
-          "Une erreur est survenue lors de la création de votre ticket. Veuillez réessayer plus tard.",
+        content: await interaction.t("TICKET.CREATE_FAILED"),
         ephemeral: true,
       });
     }

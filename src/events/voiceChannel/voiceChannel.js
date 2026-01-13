@@ -1,33 +1,66 @@
+const logger = require("../../utils/logger");
+const { t } = require("../../utils/t");
+const GuildConfiguration = require("../../models/GuildConfiguration");
+
 module.exports = {
-  name: "voiceStateUpdate", async execute(client,oldState, newState) {
-    // Vérifie si le salon de base est configuré
-    const GuildConfig = await require("../../models/GuildConfiguration").findOne({ guildId: newState.guild.id });
-    if (!GuildConfig || !GuildConfig.vocChannelId) return;
+  name: "voiceStateUpdate",
+  async execute(client, oldState, newState) {
+    const guildId = newState.guild?.id;
+    if (!guildId) return;
 
-    // Vérifie si l'utilisateur a rejoint le salon de base
+    const guildConfig = await GuildConfiguration.findOne({ guildId });
+    if (!guildConfig || !guildConfig.vocChannelId) return;
 
-    if (oldState.channelId !== newState.channelId && newState.channelId === GuildConfig.vocChannelId) {
-
+    if (
+      oldState.channelId !== newState.channelId &&
+      newState.channelId === guildConfig.vocChannelId
+    ) {
       const member = newState.member;
-      console.log(`🎧 ${member.user.tag} a rejoint le salon de base !`);
-      console.log(`${oldState.channelId} -> ${newState.channelId}`);
+      if (!member) return;
+
+      logger.info(`🎧 ${member.user.tag} a rejoint le salon de base !`);
 
       try {
-        // demander le nom du salon
+        const baseChannel = newState.guild.channels.cache.get(
+          guildConfig.vocChannelId,
+        );
+        if (!baseChannel) return;
+
+        const defaultName = await t(
+          { guildId },
+          "VOICE.CREATE.DEFAULT_NAME",
+          { username: member.user.username },
+        );
+
+        const prompt = await t(
+          { guildId },
+          "VOICE.CREATE.ASK_NAME",
+          { member: `${member}` },
+        );
+
+        const askedMessage = await baseChannel.send(prompt);
+
         const nom = await new Promise((resolve) => {
           const filter = (m) => m.author.id === member.id;
-          newState.guild.channels.cache.get(GuildConfig.vocChannelId).send(`${member}, quel nom veux-tu pour ton salon vocal ? (Réponds dans les 30 secondes)`).then(() => {
-            newState.guild.channels.cache.get(GuildConfig.vocChannelId).awaitMessages({ filter, max: 1, time: 30000, errors: ['time'] })
-              .then(collected => {
-                const response = collected.first().content;
-                resolve(response);
-              })
-              .catch(() => {
-                resolve(`${member.user.username} 🔊`); // Nom par défaut si pas de réponse
-              });
-          });
+          baseChannel
+            .awaitMessages({
+              filter,
+              max: 1,
+              time: 30000,
+              errors: ["time"],
+            })
+            .then((collected) => {
+              const response = collected.first()?.content?.trim();
+              resolve(response || defaultName);
+            })
+            .catch(() => {
+              resolve(defaultName);
+            })
+            .finally(() => {
+              askedMessage.delete().catch(() => {});
+            });
         });
-        // Crée un nouveau salon vocal
+
         const newChannel = await newState.guild.channels.create({
           name: `${nom}`,
           type: 2,
@@ -58,12 +91,12 @@ module.exports = {
         const checkEmpty = setInterval(async () => {
           if (newChannel.members.size === 0) {
             clearInterval(checkEmpty);
-            await newChannel.delete().catch(() => { });
-            console.log(`🗑️ Salon ${newChannel.name} supprimé (vide).`);
+            await newChannel.delete().catch(() => {});
+            logger.info(`🗑️ Salon ${newChannel.name} supprimé (vide).`);
           }
         }, 10000);
       } catch (error) {
-        console.error("Erreur lors de la création du salon vocal :", error);
+        logger.error("Erreur lors de la création du salon vocal :", error);
       }
     }
   },

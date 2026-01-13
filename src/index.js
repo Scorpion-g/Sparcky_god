@@ -3,6 +3,7 @@ const { Client, IntentsBitField,Options } = require('discord.js');
 const mongoose = require('mongoose');
 const eventHandler = require('./handlers/eventHandler');
 const logger = require('./utils/logger');
+const { initI18n } = require('./utils/i18n');
 
 const express= require("express");
 
@@ -54,6 +55,9 @@ client.commands = new Map();
     await mongoose.connect(process.env.MONGODB_URI);
     console.log('Connected to DB.');
 
+    // i18n
+    await initI18n();
+
     // Charge tous les events
     eventHandler(client);
 
@@ -62,4 +66,3 @@ client.commands = new Map();
     console.error('Erreur au lancement du bot:', error);
   }
 })();
-

@@ -54,17 +54,38 @@ module.exports = {
             (cmd) => cmd.name === commandData.name,
           );
 
-          if (existingCommand) {
-            if (areCommandsDifferent(existingCommand, commandData)) {
-              await applicationCommands.edit(existingCommand.id, commandData);
-              logger.info(`♻️ Commande mise à jour (${scope}): "${commandData.name}"`);
+          try {
+            if (existingCommand) {
+              if (areCommandsDifferent(existingCommand, commandData)) {
+                await applicationCommands.edit(existingCommand.id, commandData);
+                logger.info(
+                  `♻️ Commande mise à jour (${scope}): "${commandData.name}"`,
+                );
+              }
+            } else {
+              await applicationCommands.create(commandData);
+              logger.info(`✨ Commande créée (${scope}): "${commandData.name}"`);
             }
-          } else {
-            await applicationCommands.create(commandData);
-            logger.info(`✨ Commande créée (${scope}): "${commandData.name}"`);
-          }
 
-          client.commands.set(commandData.name, localCommand);
+            client.commands.set(commandData.name, localCommand);
+          } catch (err) {
+            const msg = `❌ Erreur sync commande (${scope}) name="${commandData.name}" type=${commandData.type}: ${err?.message || err}`;
+            logger.error(msg);
+            if (process.env.DEBUG_COMMAND_SYNC === "1") {
+              // Winston peut ne pas sortir en console selon la config, donc on force aussi la sortie console.
+              console.error(msg);
+              try {
+                const payload = JSON.stringify(commandData, null, 2);
+                logger.error(
+                  `[command payload:${scope}:${commandData.name}] ${payload}`,
+                );
+                console.error(`[command payload:${scope}:${commandData.name}] ${payload}`);
+              } catch {
+                // ignore
+              }
+            }
+            throw err;
+          }
         }
       }
 
@@ -80,4 +101,3 @@ module.exports = {
     }
   },
 };
-

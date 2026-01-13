@@ -12,86 +12,94 @@ module.exports = {
   data: new SlashCommandBuilder()
     .setName("rolereact")
     .setDescription("Configure un message de réaction pour obtenir un rôle")
+    .setDescriptionLocalizations({
+      "en-US": "Configure a reaction message to get a role",
+    })
     .addStringOption((option) =>
       option
         .setName("message_id")
         .setDescription("L'ID du message à configurer")
+        .setDescriptionLocalizations({
+          "en-US": "ID of the message to configure",
+        })
         .setRequired(true),
     )
     .addRoleOption((option) =>
       option
-        .setName("rôle")
+        .setName("role")
         .setDescription("Le rôle à attribuer")
+        .setDescriptionLocalizations({
+          "en-US": "Role to assign",
+        })
         .setRequired(true),
     )
     .addStringOption((option) =>
       option
         .setName("button_emoji")
         .setDescription("Emoji du bouton (Unicode ou ID d'emoji personnalisé)")
+        .setDescriptionLocalizations({
+          "en-US": "Button emoji (Unicode or custom emoji ID)",
+        })
         .setRequired(true),
     )
-    .setDefaultMemberPermissions(PermissionFlagsBits.ManageRoles),
+    .setDefaultMemberPermissions(BigInt(PermissionFlagsBits.ManageRoles)),
 
   async execute(interaction) {
     if (!interaction.inGuild()) {
       return interaction.reply({
-        content: "❌ Cette commande ne peut être utilisée que dans un serveur.",
+        content: await interaction.t("ERRORS.GUILD_ONLY"),
         ephemeral: true,
       });
     }
 
     const messageId = interaction.options.getString("message_id");
-    const role = interaction.options.getRole("rôle");
+    const role = interaction.options.getRole("role");
     const buttonEmoji = interaction.options.getString("button_emoji");
 
     await interaction.deferReply({ ephemeral: true });
 
-    // Vérifier permissions bot
     if (
       !interaction.guild.members.me.permissions.has(
         PermissionFlagsBits.ManageRoles,
       )
     ) {
       return interaction.editReply(
-        "❌ Je n'ai pas la permission de gérer les rôles.",
+        await interaction.t("UTILES.ROLEREACT.NO_BOT_PERMISSION"),
       );
     }
     if (role.position >= interaction.guild.members.me.roles.highest.position) {
       return interaction.editReply(
-        "❌ Je ne peux pas attribuer ce rôle car il est au-dessus de mon rôle le plus élevé.",
+        await interaction.t("UTILES.ROLEREACT.ROLE_TOO_HIGH"),
       );
     }
 
-    // Récupérer le message
     let targetMessage;
     try {
       targetMessage = await interaction.channel.messages.fetch(messageId);
     } catch (error) {
-       interaction.editReply(
-        `❌ Impossible de récupérer le message. Vérifie l'ID.` ,
+      await interaction.editReply(
+        await interaction.t("UTILES.ROLEREACT.MESSAGE_FETCH_FAILED"),
       );
       logger.error("Erreur lors de la récupération du message :", error);
+      return;
     }
 
-    // Vérifier emoji
     let emoji = buttonEmoji;
     if (/^\d+$/.test(buttonEmoji)) {
       emoji = interaction.guild.emojis.cache.get(buttonEmoji);
       if (!emoji) {
         return interaction.editReply(
-          "❌ Emoji personnalisé introuvable dans ce serveur.",
+          await interaction.t("UTILES.ROLEREACT.EMOJI_NOT_FOUND"),
         );
       }
     }
 
-    // Créer le bouton
     const button = new ButtonBuilder()
       .setCustomId(`role_react_${role.id}`)
-      .setLabel(`Obtenir le rôle ${role.name}`)
+      .setLabel(await interaction.t("UTILES.ROLEREACT.BUTTON_LABEL", { role: role.name }))
       .setStyle(ButtonStyle.Primary)
       .setEmoji(emoji);
 
-    // Ajouter le bouton
     let row;
     if (targetMessage.components.length > 0) {
       row = ActionRowBuilder.from(targetMessage.components[0]);
@@ -101,12 +109,12 @@ module.exports = {
         )
       ) {
         return interaction.editReply(
-          "❌ Un bouton pour ce rôle existe déjà sur ce message.",
+          await interaction.t("UTILES.ROLEREACT.BUTTON_ALREADY_EXISTS"),
         );
       }
       if (row.components.length >= 5) {
         return interaction.editReply(
-          "❌ Impossible d'ajouter plus de 5 boutons par ligne.",
+          await interaction.t("UTILES.ROLEREACT.TOO_MANY_BUTTONS"),
         );
       }
       row.addComponents(button);
@@ -117,18 +125,18 @@ module.exports = {
     try {
       await targetMessage.edit({ components: [row] });
     } catch (error) {
-       interaction.editReply(
-        `❌ Impossible d'ajouter le bouton au message.`,
+      await interaction.editReply(
+        await interaction.t("UTILES.ROLEREACT.MESSAGE_EDIT_FAILED"),
       );
       logger.error("Erreur lors de l'édition du message :", error);
+      return;
     }
 
-    // Confirmation
     const successEmbed = new EmbedBuilder()
       .setColor("#00FF00")
-      .setTitle("Configuration réussie")
+      .setTitle(await interaction.t("UTILES.ROLEREACT.SUCCESS_TITLE"))
       .setDescription(
-        `✅ Le message a été configuré pour attribuer le rôle **${role.name}** avec le bouton.`,
+        await interaction.t("UTILES.ROLEREACT.SUCCESS_DESC", { role: role.name }),
       )
       .setTimestamp();
 

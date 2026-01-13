@@ -6,10 +6,16 @@ const {
 const Level = require("../../models/Level");
 const Warn = require("../../models/Warn");
 const logger = require("../../utils/logger");
+
 module.exports = {
   data: new ContextMenuCommandBuilder()
     .setName("info")
-    .setType(ApplicationCommandType.User), //2 pour les utilisateurs
+    .setNameLocalizations({
+      "en-US": "info",
+      fr: "info",
+    })
+    .setType(ApplicationCommandType.User),
+
   async execute(interaction) {
     try {
       const user = interaction.targetUser;
@@ -18,98 +24,117 @@ module.exports = {
         .catch(() => null);
       if (!member) {
         return interaction.reply({
-          content: "Utilisateur non trouvé dans ce serveur.",
+          content: await interaction.t("INFOUSER.NOT_IN_GUILD"),
           ephemeral: true,
         });
       }
-      //Récupérer les informations de niveau
+
       const levelData = await Level.findOne({
         userId: user.id,
         guildId: interaction.guild.id,
       });
-      //Récupérer les informations de warns
+
       const warns = await Warn.find({
         userId: user.id,
         guildId: interaction.guild.id,
       });
+
       const embed = new EmbedBuilder()
-        .setTitle(`Infos de ${user.tag}`)
+        .setTitle(await interaction.t("INFOUSER.TITLE", { tag: user.tag }))
         .setThumbnail(user.displayAvatarURL({ dynamic: true }))
         .setColor("#0099ff")
         .addFields(
-          { name: "🆔 ID", value: user.id, inline: true },
           {
-            name: "📅 Compte créé le",
+            name: await interaction.t("INFOUSER.FIELDS.ID"),
+            value: user.id,
+            inline: true,
+          },
+          {
+            name: await interaction.t("INFOUSER.FIELDS.ACCOUNT_CREATED"),
             value: `<t:${Math.floor(user.createdTimestamp / 1000)}:F>`,
             inline: true,
           },
           {
-            name: "👤 Rejoint le serveur",
+            name: await interaction.t("INFOUSER.FIELDS.JOINED_GUILD"),
             value: member.joinedAt
               ? `<t:${Math.floor(member.joinedAt.getTime() / 1000)}:F>`
-              : "Inconnu",
+              : await interaction.t("INFOUSER.UNKNOWN"),
             inline: true,
           },
           {
-            name: "🏷️ Rôles",
+            name: await interaction.t("INFOUSER.FIELDS.ROLES"),
             value:
               member.roles.cache.size > 1
                 ? member.roles.cache
-                  .filter((r) => r.id !== interaction.guild.id)
-                  .map((r) => r.name)
-                  .join(", ")
-                : "Aucun rôle",
+                    .filter((r) => r.id !== interaction.guild.id)
+                    .map((r) => r.name)
+                    .join(", ")
+                : await interaction.t("INFOUSER.NO_ROLE"),
             inline: false,
           },
-          { name: "⚠️ Warns", value: warns.length.toString(), inline: true },
           {
-            name: "⭐ Niveau",
+            name: await interaction.t("INFOUSER.FIELDS.WARNS"),
+            value: warns.length.toString(),
+            inline: true,
+          },
+          {
+            name: await interaction.t("INFOUSER.FIELDS.LEVEL"),
             value: levelData
-              ? `Niveau ${levelData.level} (${levelData.xp} XP)`
-              : "Aucun niveau",
+              ? await interaction.t("INFOUSER.LEVEL_VALUE", {
+                  level: levelData.level,
+                  xp: levelData.xp,
+                })
+              : await interaction.t("INFOUSER.NO_LEVEL"),
             inline: true,
           },
         )
         .setTimestamp();
+
       try {
         if (member.presence) {
           embed.addFields({
-            name: "Statut",
-            value: member.presence.status,
+            name: await interaction.t("INFOUSER.FIELDS.STATUS"),
+            value: String(member.presence.status),
             inline: true,
           });
+
           if (member.presence.activities.length > 0) {
-            const activities = member.presence.activities
-              .map((activity) => {
-                let activityType;
-                switch (activity.type) {
-                  case 0:
-                    activityType = "Joue à";
-                    break;
-                  case 1:
-                    activityType = "En streaming";
-                    break;
-                  case 2:
-                    activityType = "Écoute";
-                    break;
-                  case 3:
-                    activityType = "Regarde";
-                    break;
-                  case 4:
-                    activityType = "Fait";
-                    break;
-                  case 5:
-                    activityType = "Compétition";
-                    break;
-                  default:
-                    activityType = "Fait quelque chose";
-                }
-                return `${activityType} ${activity.name}`;
-              })
-              .join("\n");
+            const resolvedActivities = (
+              await Promise.all(
+                member.presence.activities.map(async (activity) => {
+                  let activityTypeKey;
+                  switch (activity.type) {
+                    case 0:
+                      activityTypeKey = "INFOUSER.ACTIVITY.PLAYING";
+                      break;
+                    case 1:
+                      activityTypeKey = "INFOUSER.ACTIVITY.STREAMING";
+                      break;
+                    case 2:
+                      activityTypeKey = "INFOUSER.ACTIVITY.LISTENING";
+                      break;
+                    case 3:
+                      activityTypeKey = "INFOUSER.ACTIVITY.WATCHING";
+                      break;
+                    case 4:
+                      activityTypeKey = "INFOUSER.ACTIVITY.CUSTOM";
+                      break;
+                    case 5:
+                      activityTypeKey = "INFOUSER.ACTIVITY.COMPETING";
+                      break;
+                    default:
+                      activityTypeKey = "INFOUSER.ACTIVITY.DOING";
+                  }
+
+                  const prefix = await interaction.t(activityTypeKey);
+                  return `${prefix} ${activity.name}`;
+                }),
+              )
+            ).join("\n");
+
             embed.addFields({
-              name: "Activités",
-              value: activities,
+              name: await interaction.t("INFOUSER.FIELDS.ACTIVITIES"),
+              value: resolvedActivities,
               inline: false,
             });
           }
@@ -125,7 +150,7 @@ module.exports = {
         error,
       );
       await interaction.reply({
-        content: "Une erreur est survenue lors de l'exécution de la commande.",
+        content: await interaction.t("ERRORS.COMMAND_FAILED"),
         ephemeral: true,
       });
     }

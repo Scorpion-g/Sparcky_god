@@ -10,77 +10,90 @@ module.exports = {
   data: new SlashCommandBuilder()
     .setName("unban")
     .setDescription("Débannir un membre du serveur")
+    .setDescriptionLocalizations({
+      fr: "Débannir un membre du serveur",
+      "en-US": "Unban a server member",
+    })
     .addStringOption((option) =>
       option
         .setName("id")
         .setDescription("L'ID du membre à débannir")
+        .setDescriptionLocalizations({
+          fr: "L'ID du membre à débannir",
+          "en-US": "ID of the member to unban",
+        })
         .setRequired(true),
     )
     .addStringOption((option) =>
       option
         .setName("raison")
         .setDescription("La raison du débannissement")
+        .setDescriptionLocalizations({
+          fr: "La raison du débannissement",
+          "en-US": "Reason for unbanning",
+        })
         .setRequired(false),
     )
-    .setDefaultMemberPermissions(PermissionFlagsBits.BanMembers),
+    .setDefaultMemberPermissions(BigInt(PermissionFlagsBits.BanMembers)),
 
   /**
    *
-   * @param {Client} client
-   * @param {import("discord.js").CommandInteraction} interaction
+   * @param {import("discord.js").ChatInputCommandInteraction} interaction
    */
   async execute(interaction) {
     const raison =
-      interaction.options.get("raison")?.value || "Pas de raison donnée";
+      interaction.options.get("raison")?.value ||
+      (await interaction.t("COMMON.DEFAULT_REASON"));
     const memberId = interaction.options.get("id").value;
 
     await interaction.deferReply();
 
     try {
-      // Vérifie si le membre est vraiment banni
       const bans = await interaction.guild.bans.fetch();
       const banInfo = bans.get(memberId);
 
       if (!banInfo) {
         return interaction.editReply(
-          `❌ Aucun membre avec l'ID **${memberId}** n'est banni.`,
+          await interaction.t("MODERATION.UNBAN.NOT_BANNED", { memberId }),
         );
       }
 
-      // Déban
       await interaction.guild.members.unban(memberId, raison);
 
-      // Confirmation dans le channel
       const embed = new EmbedBuilder()
         .setColor("#00ff99")
-        .setTitle("✅ Unban")
-        .setDescription(`Le membre **${banInfo.user.tag}** a été débanni.`)
+        .setTitle(await interaction.t("MODERATION.UNBAN.TITLE"))
+        .setDescription(
+          await interaction.t("MODERATION.UNBAN.DESCRIPTION", {
+            tag: banInfo.user.tag,
+          }),
+        )
         .addFields(
-          { name: "ID", value: memberId, inline: true },
-          { name: "Raison", value: raison, inline: true },
-          { name: "Modérateur", value: interaction.user.tag, inline: true },
+          { name: await interaction.t("MODERATION.UNBAN.FIELDS.ID"), value: memberId, inline: true },
+          { name: await interaction.t("COMMON.REASON"), value: raison, inline: true },
+          { name: await interaction.t("MODERATION.UNBAN.FIELDS.MODERATOR"), value: interaction.user.tag, inline: true },
         )
         .setTimestamp();
 
       await interaction.editReply({ embeds: [embed] });
 
-      // Essaye d’envoyer un DM
       await banInfo.user
         .send({
           embeds: [
             new EmbedBuilder()
               .setColor("#00ff99")
-              .setTitle(`✅ Vous avez été débanni`)
+              .setTitle(await interaction.t("MODERATION.UNBAN.DM.TITLE"))
               .setDescription(
-                `Vous avez été débanni du serveur **${interaction.guild.name}**`,
+                await interaction.t("MODERATION.UNBAN.DM.DESCRIPTION", {
+                  guild: interaction.guild.name,
+                }),
               )
-              .addFields({ name: "Raison", value: raison })
+              .addFields({ name: await interaction.t("COMMON.REASON"), value: raison })
               .setTimestamp(),
           ],
         })
         .catch(() => {});
 
-      // Log modération
       const guildConfig = await GuildConfiguration.findOne({
         guildId: interaction.guild.id,
       });
@@ -93,18 +106,16 @@ module.exports = {
           embeds: [
             new EmbedBuilder()
               .setColor("#00ff99")
-              .setTitle("📋 Log Unban")
+              .setTitle(await interaction.t("MODERATION.UNBAN.LOG.TITLE"))
               .setDescription(
-                `Le membre **${banInfo.user.tag}** a été débanni.`,
+                await interaction.t("MODERATION.UNBAN.LOG.DESCRIPTION", {
+                  tag: banInfo.user.tag,
+                }),
               )
               .addFields(
-                { name: "ID", value: memberId, inline: true },
-                { name: "Raison", value: raison, inline: true },
-                {
-                  name: "Modérateur",
-                  value: interaction.user.tag,
-                  inline: true,
-                },
+                { name: await interaction.t("MODERATION.UNBAN.FIELDS.ID"), value: memberId, inline: true },
+                { name: await interaction.t("COMMON.REASON"), value: raison, inline: true },
+                { name: await interaction.t("MODERATION.UNBAN.FIELDS.MODERATOR"), value: interaction.user.tag, inline: true },
               )
               .setTimestamp(),
           ],
@@ -112,9 +123,7 @@ module.exports = {
       }
     } catch (error) {
       logger.error(`Erreur lors du débannissement:`, error);
-      await interaction.editReply(
-        "❌ Une erreur est survenue lors du débannissement.",
-      );
+      await interaction.editReply(await interaction.t("ERRORS.COMMAND_FAILED"));
     }
   },
 };

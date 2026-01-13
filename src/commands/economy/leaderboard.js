@@ -1,105 +1,99 @@
-const { SlashCommandBuilder,EmbedBuilder } = require("discord.js");
+const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("leaderboard")
-    .setDescription("Affiche le classement des membres").addSubcommand((subcommand) =>
+    .setDescription("Affiche le classement des membres")
+    .setDescriptionLocalizations({
+      fr: "Affiche le classement des membres",
+      "en-US": "Show the members leaderboard",
+    })
+    .addSubcommand((subcommand) =>
       subcommand
         .setName("warns")
-        .setDescription("Classement des membres avec le plus de warns"),
+        .setDescription("Classement des membres avec le plus de warns")
+        .setDescriptionLocalizations({
+          fr: "Classement des membres avec le plus de warns",
+          "en-US": "Leaderboard of members with the most warnings",
+        }),
     )
     .addSubcommand((subcommand) =>
       subcommand
-        .setName("messages")
-        .setDescription("Classement des membres avec le plus de messages"),
-    ).addSubcommand((subcommand) =>
-      subcommand
         .setName("money")
-        .setDescription("Classement des membres avec le plus d'argent"),
-    ).addSubcommand((subcommand) =>
-      subcommand
-        .setName("voicetime")
-        .setDescription("Classement des membres avec le plus de temps en vocal"),
-    ).addSubcommand((subcommand) =>
-      subcommand
-        .setName("invites")
-        .setDescription("Classement des membres avec le plus d'invitations"),
-    ).addSubcommand((subcommand) =>
+        .setDescription("Classement des membres avec le plus d'argent")
+        .setDescriptionLocalizations({
+          fr: "Classement des membres avec le plus d'argent",
+          "en-US": "Leaderboard of members with the most money",
+        }),
+    )
+    .addSubcommand((subcommand) =>
       subcommand
         .setName("level")
-        .setDescription("Classement des membres avec le plus haut niveau"),
+        .setDescription("Classement des membres avec le plus haut niveau")
+        .setDescriptionLocalizations({
+          fr: "Classement des membres avec le plus haut niveau",
+          "en-US": "Leaderboard of members with the highest level",
+        }),
     ),
+
   /**
-   * @param {import("discord.js").CommandInteraction} interaction
+   * @param {import("discord.js").ChatInputCommandInteraction} interaction
    */
   async execute(interaction) {
     const subcommand = interaction.options.getSubcommand();
-    let Model, field, title, unit;
 
-    switch (subcommand) {
-      case "warns":
-        Model = require("../../models/Warn");
-        field = "warn";
-        title = "Classement des membres avec le plus de warns";
-        unit = "warns";
-        break;
-      case "messages":
-        Model = require("../../models/MessageCount");
-        field = "count";
-        title = "Classement des membres avec le plus de messages";
-        unit = "messages";
-        break;
-      case "money":
-        Model = require("../../models/User");
-        field = "balance";
-        title = "Classement des membres avec le plus d'argent";
-        unit = "💰";
-        break;
-      case "voicetime":
-        Model = require("../../models/VoiceTime");
-        field = "time";
-        title = "Classement des membres avec le plus de temps en vocal";
-        unit = "heures";
-        break;
-      case "invites":
-        Model = require("../../models/Invite");
-        field = "total";
-        title = "Classement des membres avec le plus d'invitations";
-        unit = "invitations";
-        break;
-      case "level":
-        Model = require("../../models/Level");
-        field = "level";
-        title = "Classement des membres avec le plus haut niveau";
-        unit = "niveau";
-        break;
-      default:
-        return interaction.reply({
-          content: "Sous-commande invalide.",
-          ephemeral: true,
-        });
+    const configs = {
+      warns: {
+        Model: require("../../models/Warn"),
+        field: "warn",
+        titleKey: "ECONOMY.LEADERBOARD.TITLES.WARNS",
+        unitKey: "ECONOMY.LEADERBOARD.UNITS.WARNS",
+      },
+      money: {
+        Model: require("../../models/User"),
+        field: "balance",
+        titleKey: "ECONOMY.LEADERBOARD.TITLES.MONEY",
+        unitKey: "ECONOMY.LEADERBOARD.UNITS.MONEY",
+      },
+      level: {
+        Model: require("../../models/Level"),
+        field: "level",
+        titleKey: "ECONOMY.LEADERBOARD.TITLES.LEVEL",
+        unitKey: "ECONOMY.LEADERBOARD.UNITS.LEVEL",
+      },
+    };
+
+    const cfg = configs[subcommand];
+    if (!cfg) {
+      return interaction.reply({
+        content: await interaction.t("ECONOMY.LEADERBOARD.INVALID_SUBCOMMAND"),
+        ephemeral: true,
+      });
     }
 
     await interaction.deferReply();
 
-    const topEntries = await Model.find({ guildId: interaction.guild.id })
-      .sort({ [field]: -1 })
+    const topEntries = await cfg.Model.find({ guildId: interaction.guild.id })
+      .sort({ [cfg.field]: -1 })
       .limit(10);
 
     if (topEntries.length === 0) {
-      return interaction.editReply("Aucune donnée disponible pour ce classement.");
+      return interaction.editReply(
+        await interaction.t("ECONOMY.LEADERBOARD.NO_DATA"),
+      );
     }
+
+    const unit = await interaction.t(cfg.unitKey);
+    const title = await interaction.t(cfg.titleKey);
 
     let description = "";
     for (let i = 0; i < topEntries.length; i++) {
       const entry = topEntries[i];
-      const member = await interaction.guild.members.fetch(entry.userId).catch(() => null);
-      const memberName = member ? member.user.tag : "Utilisateur inconnu";
-      let value = entry[field];
-
-      if (subcommand === "voicetime") {
-        value = (value / 3600).toFixed(2); // Convertir les secondes en heures
-      }
+      const member = await interaction.guild.members
+        .fetch(entry.userId)
+        .catch(() => null);
+      const memberName = member ? member.user.tag : await interaction.t("ECONOMY.LEADERBOARD.UNKNOWN_USER");
+      const value = entry[cfg.field];
 
       description += `**${i + 1}. ${memberName}** - ${value} ${unit}\n`;
     }
@@ -112,4 +106,4 @@ module.exports = {
 
     interaction.editReply({ embeds: [embed] });
   },
-};  
+};

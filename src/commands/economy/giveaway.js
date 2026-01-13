@@ -1,60 +1,104 @@
-const { SlashCommandBuilder,EmbedBuilder,PermissionFlagsBits } = require("discord.js");
+const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits } = require("discord.js");
 const Giveaway = require("../../models/Giveaway");
-
+const logger = require("../../utils/logger");
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("giveaway")
     .setDescription("Gérer les giveaways")
+    .setDescriptionLocalizations({
+      fr: "Gérer les giveaways",
+      "en-US": "Manage giveaways",
+    })
     .addSubcommand((sub) =>
       sub
         .setName("start")
         .setDescription("Démarrer un giveaway")
+        .setDescriptionLocalizations({
+          fr: "Démarrer un giveaway",
+          "en-US": "Start a giveaway",
+        })
         .addStringOption((opt) =>
-          opt.setName("prize").setDescription("Prix du giveaway").setRequired(true)
+          opt
+            .setName("prize")
+            .setDescription("Prix du giveaway")
+            .setDescriptionLocalizations({
+              fr: "Prix du giveaway",
+              "en-US": "Giveaway prize",
+            })
+            .setRequired(true),
         )
         .addIntegerOption((opt) =>
           opt
             .setName("duration")
             .setDescription("Durée du giveaway en minutes")
-            .setRequired(true)
+            .setDescriptionLocalizations({
+              fr: "Durée du giveaway en minutes",
+              "en-US": "Giveaway duration in minutes",
+            })
+            .setRequired(true),
         )
         .addIntegerOption((opt) =>
           opt
             .setName("winners")
             .setDescription("Nombre de gagnants")
-            .setRequired(true)
+            .setDescriptionLocalizations({
+              fr: "Nombre de gagnants",
+              "en-US": "Number of winners",
+            })
+            .setRequired(true),
         )
         .addChannelOption((opt) =>
           opt
             .setName("channel")
             .setDescription("Canal pour le giveaway")
-            .setRequired(true)
-        )
+            .setDescriptionLocalizations({
+              fr: "Canal pour le giveaway",
+              "en-US": "Channel for the giveaway",
+            })
+            .setRequired(true),
+        ),
     )
     .addSubcommand((sub) =>
       sub
         .setName("end")
         .setDescription("Terminer un giveaway")
+        .setDescriptionLocalizations({
+          fr: "Terminer un giveaway",
+          "en-US": "End a giveaway",
+        })
         .addStringOption((opt) =>
           opt
             .setName("giveaway_id")
             .setDescription("ID du giveaway à terminer")
-            .setRequired(true)
-        )
+            .setDescriptionLocalizations({
+              fr: "ID du giveaway à terminer",
+              "en-US": "Giveaway ID to end",
+            })
+            .setRequired(true),
+        ),
     )
     .addSubcommand((sub) =>
       sub
         .setName("reroll")
         .setDescription("Relancer un giveaway")
+        .setDescriptionLocalizations({
+          fr: "Relancer un giveaway",
+          "en-US": "Reroll a giveaway",
+        })
         .addStringOption((opt) =>
           opt
             .setName("giveaway_id")
             .setDescription("ID du giveaway à relancer")
-            .setRequired(true)
-        )
+            .setDescriptionLocalizations({
+              fr: "ID du giveaway à relancer",
+              "en-US": "Giveaway ID to reroll",
+            })
+            .setRequired(true),
+        ),
     )
-    .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild),
+    .setDefaultMemberPermissions(BigInt(PermissionFlagsBits.ManageGuild)),
+
   async execute(interaction) {
     const subcommand = interaction.options.getSubcommand();
 
@@ -66,7 +110,7 @@ module.exports = {
 
       if (channel.type !== 0) {
         return interaction.reply({
-          content: "Veuillez sélectionner un canal textuel.",
+          content: await interaction.t("ECONOMY.GIVEAWAY.START.INVALID_CHANNEL"),
           ephemeral: true,
         });
       }
@@ -76,9 +120,9 @@ module.exports = {
       const giveaway = new Giveaway({
         guildId: interaction.guild.id,
         channelId: channel.id,
-        prize: prize,
-        endTime: endTime,
-        winnersCount: winnersCount,
+        prize,
+        endTime,
+        winnersCount,
         participants: [],
         isEnded: false,
       });
@@ -86,11 +130,19 @@ module.exports = {
       await giveaway.save();
 
       const embed = new EmbedBuilder()
-        .setTitle("Nouveau Giveaway!")
+        .setTitle(await interaction.t("ECONOMY.GIVEAWAY.START.EMBED.TITLE"))
         .setDescription(
-          `Prix: **${prize}**\nDurée: **${duration} minutes**\nNombre de gagnants: **${winnersCount}**\nRéagissez avec 🎉 pour participer!`
+          await interaction.t("ECONOMY.GIVEAWAY.START.EMBED.DESCRIPTION", {
+            prize,
+            duration,
+            winnersCount,
+          }),
         )
-        .setFooter({ text: `Giveaway ID: ${giveaway._id}` })
+        .setFooter({
+          text: await interaction.t("ECONOMY.GIVEAWAY.START.EMBED.FOOTER", {
+            id: giveaway._id.toString(),
+          }),
+        })
         .setColor("#00ff00")
         .setTimestamp();
 
@@ -101,10 +153,15 @@ module.exports = {
       await giveaway.save();
 
       await interaction.reply({
-        content: `Le giveaway a été démarré dans ${channel}.`,
+        content: await interaction.t("ECONOMY.GIVEAWAY.START.SUCCESS", {
+          channel: `${channel}`,
+        }),
         ephemeral: true,
       });
-    } else if (subcommand === "end") {
+      return;
+    }
+
+    if (subcommand === "end") {
       const giveawayId = interaction.options.getString("giveaway_id");
       const giveaway = await Giveaway.findOne({
         _id: giveawayId,
@@ -113,14 +170,14 @@ module.exports = {
 
       if (!giveaway) {
         return interaction.reply({
-          content: "Giveaway non trouvé.",
+          content: await interaction.t("ECONOMY.GIVEAWAY.NOT_FOUND"),
           ephemeral: true,
         });
       }
 
       if (giveaway.isEnded) {
         return interaction.reply({
-          content: "Ce giveaway est déjà terminé.",
+          content: await interaction.t("ECONOMY.GIVEAWAY.ALREADY_ENDED"),
           ephemeral: true,
         });
       }
@@ -131,31 +188,36 @@ module.exports = {
       const channel = interaction.guild.channels.cache.get(giveaway.channelId);
       if (!channel) {
         return interaction.reply({
-          content: "Le canal du giveaway n'existe plus.",
+          content: await interaction.t("ECONOMY.GIVEAWAY.CHANNEL_MISSING"),
           ephemeral: true,
         });
       }
 
-      const giveawayMessage = await channel.messages.fetch(giveaway.messageId);
+      const giveawayMessage = await channel.messages
+        .fetch(giveaway.messageId)
+        .catch(() => null);
       if (!giveawayMessage) {
         return interaction.reply({
-          content: "Le message du giveaway n'existe plus.",
+          content: await interaction.t("ECONOMY.GIVEAWAY.MESSAGE_MISSING"),
           ephemeral: true,
         });
       }
 
-      const participants = giveaway.participants;
+      const participants = [...giveaway.participants];
       if (participants.length === 0) {
         const embed = new EmbedBuilder()
-          .setTitle("Giveaway Terminé")
+          .setTitle(await interaction.t("ECONOMY.GIVEAWAY.END.EMBED.TITLE"))
           .setDescription(
-            `Le giveaway pour **${giveaway.prize}** est terminé.\nAucun participant n'a réagi.`
+            await interaction.t("ECONOMY.GIVEAWAY.END.EMBED.NO_PARTICIPANTS", {
+              prize: giveaway.prize,
+            }),
           )
           .setColor("#ff0000")
           .setTimestamp();
         await giveawayMessage.edit({ embeds: [embed] });
+
         return interaction.reply({
-          content: "Le giveaway est terminé, mais il n'y a pas de participants.",
+          content: await interaction.t("ECONOMY.GIVEAWAY.END.NO_PARTICIPANTS"),
           ephemeral: true,
         });
       }
@@ -166,24 +228,29 @@ module.exports = {
         winners.push(participants.splice(randomIndex, 1)[0]);
       }
 
+      const winnersMentions = winners.map((w) => `<@${w}>`).join(", ");
+
       const embed = new EmbedBuilder()
-        .setTitle("Giveaway Terminé")
+        .setTitle(await interaction.t("ECONOMY.GIVEAWAY.END.EMBED.TITLE"))
         .setDescription(
-          `Le giveaway pour **${giveaway.prize}** est terminé!\nFélicitations à: ${winners
-            .map((w) => `<@${w}>`)
-            .join(", ")}`
+          await interaction.t("ECONOMY.GIVEAWAY.END.EMBED.WINNERS", {
+            prize: giveaway.prize,
+            winners: winnersMentions,
+          }),
         )
         .setColor("#00ff00")
         .setTimestamp();
       await giveawayMessage.edit({ embeds: [embed] });
 
-      await interaction.reply({
-        content: `Le giveaway est terminé. Gagnants: ${winners
-          .map((w) => `<@${w}>`)
-          .join(", ")}`,
+      return interaction.reply({
+        content: await interaction.t("ECONOMY.GIVEAWAY.END.SUCCESS", {
+          winners: winnersMentions,
+        }),
         ephemeral: true,
       });
-    } else if (subcommand === "reroll") {
+    }
+
+    if (subcommand === "reroll") {
       const giveawayId = interaction.options.getString("giveaway_id");
       const giveaway = await Giveaway.findOne({
         _id: giveawayId,
@@ -192,14 +259,14 @@ module.exports = {
 
       if (!giveaway) {
         return interaction.reply({
-          content: "Giveaway non trouvé.",
+          content: await interaction.t("ECONOMY.GIVEAWAY.NOT_FOUND"),
           ephemeral: true,
         });
       }
 
       if (!giveaway.isEnded) {
         return interaction.reply({
-          content: "Ce giveaway n'est pas encore terminé.",
+          content: await interaction.t("ECONOMY.GIVEAWAY.NOT_ENDED"),
           ephemeral: true,
         });
       }
@@ -207,23 +274,25 @@ module.exports = {
       const channel = interaction.guild.channels.cache.get(giveaway.channelId);
       if (!channel) {
         return interaction.reply({
-          content: "Le canal du giveaway n'existe plus.",
+          content: await interaction.t("ECONOMY.GIVEAWAY.CHANNEL_MISSING"),
           ephemeral: true,
         });
       }
 
-      const giveawayMessage = await channel.messages.fetch(giveaway.messageId);
+      const giveawayMessage = await channel.messages
+        .fetch(giveaway.messageId)
+        .catch(() => null);
       if (!giveawayMessage) {
         return interaction.reply({
-          content: "Le message du giveaway n'existe plus.",
+          content: await interaction.t("ECONOMY.GIVEAWAY.MESSAGE_MISSING"),
           ephemeral: true,
         });
       }
 
-      const participants = giveaway.participants;
+      const participants = [...giveaway.participants];
       if (participants.length === 0) {
         return interaction.reply({
-          content: "Aucun participant pour relancer le giveaway.",
+          content: await interaction.t("ECONOMY.GIVEAWAY.REROLL.NO_PARTICIPANTS"),
           ephemeral: true,
         });
       }
@@ -234,23 +303,32 @@ module.exports = {
         winners.push(participants.splice(randomIndex, 1)[0]);
       }
 
+      const winnersMentions = winners.map((w) => `<@${w}>`).join(", ");
+
       const embed = new EmbedBuilder()
-        .setTitle("Giveaway Relancé")
+        .setTitle(await interaction.t("ECONOMY.GIVEAWAY.REROLL.EMBED.TITLE"))
         .setDescription(
-          `Le giveaway pour **${giveaway.prize}** a été relancé!\nNouveaux gagnants: ${winners
-            .map((w) => `<@${w}>`)
-            .join(", ")}`
+          await interaction.t("ECONOMY.GIVEAWAY.REROLL.EMBED.DESCRIPTION", {
+            prize: giveaway.prize,
+            winners: winnersMentions,
+          }),
         )
         .setColor("#00ff00")
         .setTimestamp();
       await giveawayMessage.edit({ embeds: [embed] });
 
-      await interaction.reply({
-        content: `Le giveaway a été relancé. Nouveaux gagnants: ${winners
-          .map((w) => `<@${w}>`)
-          .join(", ")}`,
+      return interaction.reply({
+        content: await interaction.t("ECONOMY.GIVEAWAY.REROLL.SUCCESS", {
+          winners: winnersMentions,
+        }),
         ephemeral: true,
       });
     }
+
+    logger.warn(`[giveaway] Unknown subcommand: ${subcommand}`);
+    return interaction.reply({
+      content: await interaction.t("ECONOMY.GIVEAWAY.UNKNOWN_SUBCOMMAND"),
+      ephemeral: true,
+    });
   },
-};  
+};

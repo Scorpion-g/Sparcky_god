@@ -9,17 +9,23 @@ module.exports = {
   data: new SlashCommandBuilder()
     .setName("language")
     .setDescription("Changer la langue du bot sur ce serveur")
+    .setDescriptionLocalizations({
+      "en-US": "Change the bot language in this server",
+    })
     .addStringOption((option) =>
       option
         .setName("lang")
         .setDescription("Langue")
+        .setDescriptionLocalizations({
+          "en-US": "Language",
+        })
         .setRequired(true)
         .addChoices(
-          { name: "Français", value: "fr" },
-          { name: "English", value: "en" },
+          { name: "Français", name_localizations: { "en-US": "French" }, value: "fr" },
+          { name: "English", name_localizations: { "en-US": "English" }, value: "en" },
         ),
     )
-    .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild),
+    .setDefaultMemberPermissions(BigInt(PermissionFlagsBits.ManageGuild)),
 
   async execute(interaction) {
     const lang = interaction.options.getString("lang", true);
@@ -41,4 +47,3 @@ module.exports = {
     await interaction.reply({ embeds: [embed], ephemeral: true });
   },
 };
-

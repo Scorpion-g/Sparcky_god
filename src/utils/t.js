@@ -15,8 +15,18 @@ async function t(target, key, vars = {}) {
     interaction: target,
   });
 
-  return i18next.t(key, {
-    lng,
+  // Cache local sur l'interaction pour éviter de refaire des lookups DB
+  // et pour permettre à d'autres features (help) d'utiliser la même locale.
+  if (target && typeof target === "object") {
+    try {
+      target._resolvedLocale = lng;
+    } catch {
+      // ignore
+    }
+  }
+
+  const fixedT = i18next.getFixedT(lng);
+  return fixedT(key, {
     ...vars,
   });
 }
@@ -33,10 +43,20 @@ function attachT(interaction) {
     configurable: false,
     value: (key, vars) => t(interaction, key, vars),
   });
+
+  // Permet de récupérer facilement la langue déjà choisie par la guild (DB)
+  // pour d'autres besoins (ex: afficher les descriptions localisées des commandes).
+  if (!Object.prototype.hasOwnProperty.call(interaction, "_resolvedLocale")) {
+    Object.defineProperty(interaction, "_resolvedLocale", {
+      enumerable: false,
+      configurable: false,
+      writable: true,
+      value: null,
+    });
+  }
 }
 
 module.exports = {
   t,
   attachT,
 };
-

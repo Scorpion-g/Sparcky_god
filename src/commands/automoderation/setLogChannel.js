@@ -6,19 +6,27 @@ module.exports = {
   data: new SlashCommandBuilder()
     .setName("setlogchannel")
     .setDescription("Définir le channel de log")
+    .setDescriptionLocalizations({
+      fr: "Définir le channel de log",
+      "en-US": "Set the log channel",
+    })
     .addChannelOption((option) =>
       option
         .setName("channel")
         .setDescription("Le channel où les logs seront envoyés")
+        .setDescriptionLocalizations({
+          fr: "Le channel où les logs seront envoyés",
+          "en-US": "Channel where logs will be sent",
+        })
         .setRequired(true)
     )
-    .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild),
+    .setDefaultMemberPermissions(BigInt(PermissionFlagsBits.ManageGuild)),
   async execute(interaction) {
     const channel = interaction.options.getChannel("channel");
 
     if (channel.type !== 0) {
       return interaction.reply({
-        content: "Veuillez sélectionner un channel textuel.",
+        content: await interaction.t("AUTOMOD_CONFIG.LOGCHANNEL.INVALID_CHANNEL"),
         ephemeral: true,
       });
     }
@@ -42,9 +50,11 @@ module.exports = {
       await guildConfig.save();
 
       const embed = new EmbedBuilder()
-        .setTitle("Configuration du channel de log")
+        .setTitle(await interaction.t("AUTOMOD_CONFIG.LOGCHANNEL.TITLE"))
         .setDescription(
-          `Le channel de log a été défini sur ${channel}.`,
+          await interaction.t("AUTOMOD_CONFIG.LOGCHANNEL.DESCRIPTION", {
+            channel: `${channel}`,
+          }),
         )
         .setColor("#0099ff")
         .setTimestamp();
@@ -53,11 +63,9 @@ module.exports = {
     } catch (error) {
       logger.error(`Erreur lors de la configuration du channel de log: ${error}`);
       await interaction.editReply({
-        content:
-          "Une erreur est survenue lors de la configuration du channel de log.",
+        content: await interaction.t("ERRORS.COMMAND_FAILED"),
         ephemeral: true,
       });
     }
   },
-};  
-
+};

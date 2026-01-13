@@ -8,21 +8,23 @@ const { checkAndSanction } = require("./autoSanction");
  * @param {string} reason
  * @returns {number} le nombre total de warns
  */
-async function addWarn(member, reason = "Pas de raison donnée") {
+async function addWarn(member, reason) {
   if (!member || !member.guild) return 0;
 
   const query = { userId: member.id, guildId: member.guild.id };
   let warnDoc = await Warn.findOne(query);
 
+  const safeReason = typeof reason === "string" && reason.trim() ? reason : "";
+
   if (warnDoc) {
     warnDoc.warn += 1;
-    warnDoc.raison.push(reason);
+    if (safeReason) warnDoc.raison.push(safeReason);
   } else {
     warnDoc = new Warn({
       userId: member.id,
       guildId: member.guild.id,
       warn: 1,
-      raison: [reason],
+      raison: safeReason ? [safeReason] : [],
     });
   }
 
@@ -35,4 +37,3 @@ async function addWarn(member, reason = "Pas de raison donnée") {
 }
 
 module.exports = { addWarn };
-

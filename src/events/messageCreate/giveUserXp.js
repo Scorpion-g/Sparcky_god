@@ -1,6 +1,7 @@
 const { EmbedBuilder } = require("discord.js");
 const Level = require("../../models/Level");
 const logger = require("../../utils/logger");
+const { t } = require("../../utils/t");
 
 // Cooldowns pour éviter le spam XP
 const cooldowns = new Set();
@@ -55,9 +56,12 @@ module.exports = {
 
           const embed = new EmbedBuilder()
             .setColor("#00FF00")
-            .setTitle("✨ Level Up !")
+            .setTitle(await t(message, "LEVELING.LEVEL_UP.TITLE"))
             .setDescription(
-              `${message.member} a atteint le **niveau ${levelDoc.level}** !`,
+              await t(message, "LEVELING.LEVEL_UP.DESCRIPTION", {
+                member: `${message.member}`,
+                level: levelDoc.level,
+              }),
             )
             .setTimestamp();
 
