@@ -56,7 +56,15 @@ module.exports = {
 
           try {
             if (existingCommand) {
-              if (areCommandsDifferent(existingCommand, commandData)) {
+              // IMPORTANT: les commandes contextuelles (type 2/3) n'ont pas `description/options`
+              // côté API discord.js, ce qui faisait crasher `areCommandsDifferent`.
+              // On garde une politique simple: on les met à jour à chaque fois.
+              if (commandData.type === 2 || commandData.type === 3) {
+                await applicationCommands.edit(existingCommand.id, commandData);
+                logger.info(
+                  `♻️ Commande mise à jour (${scope}): "${commandData.name}"`,
+                );
+              } else if (areCommandsDifferent(existingCommand, commandData)) {
                 await applicationCommands.edit(existingCommand.id, commandData);
                 logger.info(
                   `♻️ Commande mise à jour (${scope}): "${commandData.name}"`,

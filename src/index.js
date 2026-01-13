@@ -10,19 +10,26 @@ const express= require("express");
 const app = express();
 const port = process.env.PORT || 3000;
 
+// Petit état interne pour la readiness
+let discordReady = false;
 
-app.get("/", (req, res) => res.send("Bot running 🚀"));
+app.get("/", (req, res) => res.send("Bot running"));
+app.get("/healthz", (req, res) => res.status(200).send("ok"));
+app.get("/readyz", (req, res) => {
+  if (discordReady) return res.status(200).send("ready");
+  return res.status(503).send("not-ready");
+});
+
 app.listen(port, () => console.log(`Healthcheck server running on port ${port}`));
 
 // Gestion des erreurs globales
-process.on("unhandledRejection", (reason, promise) => {
+process.on("unhandledRejection", (reason) => {
   logger.error("❌ Unhandled Rejection:", reason);
 });
 
 process.on("uncaughtException", (err) => {
   logger.error("❌ Uncaught Exception:", err);
 });
-
 
 const client = new Client({
   intents: [
@@ -46,6 +53,18 @@ const client = new Client({
   }),
 });
 
+client.on("ready", () => {
+  discordReady = true;
+});
+
+client.on("error", (err) => {
+  logger.error("❌ Discord client error:", err);
+});
+
+client.on("shardError", (err) => {
+  logger.error("❌ Discord shard error:", err);
+});
+
 // Initialise la collection pour les commandes
 client.commands = new Map();
 
@@ -61,7 +80,8 @@ client.commands = new Map();
     // Charge tous les events
     eventHandler(client);
 
-    client.login(process.env.TOKEN);
+    logger.info("Tentative de connexion à Discord...");
+    await client.login(process.env.TOKEN);
   } catch (error) {
     console.error('Erreur au lancement du bot:', error);
   }
