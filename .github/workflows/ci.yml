@@ -33,3 +33,7 @@ jobs:
 
       - name: Test
         run: npm test
+
+      - name: Test Coverage (Node 22 only)
+        if: matrix.node-version == '22.x'
+        run: npm run test:coverage
