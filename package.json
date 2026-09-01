@@ -7,7 +7,7 @@
     "start": "node src/index.js",
     "dev": "npx nodemon src/index.js",
     "lint": "eslint .",
-    "test": "echo \"no test yet\""
+    "test": "node --test tests/**/*.test.js"
   },
   "keywords": [
     "discord",

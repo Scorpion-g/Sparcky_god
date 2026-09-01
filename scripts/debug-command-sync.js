@@ -42,7 +42,9 @@ if (!guildId) {
           console.error(e);
           try {
             console.error(JSON.stringify(payload, null, 2));
-          } catch {}
+          } catch (jsonError) {
+            console.error("Impossible de sérialiser le payload en JSON:", jsonError);
+          }
           process.exitCode = 2;
           break;
         }
@@ -54,4 +56,3 @@ if (!guildId) {
 
   await client.login(process.env.TOKEN);
 })();
-

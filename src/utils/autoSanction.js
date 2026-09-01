@@ -13,7 +13,7 @@ async function checkAndSanction(member, warnCount) {
 
   const guildConfig = await GuildConfiguration.findOne({
     guildId: member.guild.id,
-  });
+  }).lean();
   if (!guildConfig?.autoSanction) return;
 
   let action;
