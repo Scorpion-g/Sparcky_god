@@ -3,7 +3,7 @@ const {
   EmbedBuilder,
   PermissionFlagsBits,
 } = require("discord.js");
-const { v4: uuidv4 } = require("uuid");
+const { v4: uuid } = require("uuid");
 const ShopItem = require("../../models/Shop");
 const User = require("../../models/User");
 
@@ -260,7 +260,7 @@ module.exports = {
       const type = interaction.options.getString("type");
 
       const newShopItem = new ShopItem({
-        itemId: uuidv4(),
+        itemId: uuid(),
         guildId,
         name,
         price,
