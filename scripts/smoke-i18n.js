@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 const { initI18n } = require("../src/utils/i18n");
 const { t } = require("../src/utils/t");
 
