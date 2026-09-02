@@ -7,7 +7,11 @@ const calculateLevelXp = require("../../utils/calculateLevelXp");
 const Level = require("../../models/Level");
 const { RankCardBuilder, Font } = require("canvacord");
 
-Font.loadDefault();
+try {
+  Font.loadDefault();
+} catch (e) {
+  console.warn("Font.loadDefault() not available in this version of canvacord:", e.message);
+}
 
 module.exports = {
   data: new SlashCommandBuilder()
